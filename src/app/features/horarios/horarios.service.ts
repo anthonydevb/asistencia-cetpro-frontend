@@ -16,7 +16,7 @@ export interface Horario {
   providedIn: 'root'
 })
 export class HorariosService {
-  private apiUrl = 'http://localhost:3002/horarios';
+  private apiUrl = `${environment.apiUrl}/horarios`;
 
   constructor(private http: HttpClient) {}
 

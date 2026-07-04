@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, interval, Subscription } from 'rxjs';
 import { switchMap, tap, distinctUntilChanged } from 'rxjs/operators';
-
+import { environment } from '../../environment/environment';
 export enum NotificationType {
   INFO = 'info',
   WARNING = 'warning',
@@ -62,7 +62,7 @@ export interface SendBulkNotificationDto {
   providedIn: 'root',
 })
 export class NotificationsService {
-  private apiUrl = 'http://localhost:3002/notifications';
+  private apiUrl = `${environment.apiUrl}/notifications`;
   private unreadCountSubject = new BehaviorSubject<number>(0);
   private notificationsSubject = new BehaviorSubject<Notification[]>([]);
   private pollingSubscription: Subscription | null = null;
