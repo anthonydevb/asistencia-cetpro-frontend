@@ -1,0 +1,97 @@
+<div class="qr-page">
+  <!-- Header Épico de la Sección -->
+  <div class="section-header">
+    <div class="header-main">
+      <div class="header-left">
+        <div class="header-icon-wrapper">
+          <lucide-angular [img]="QrCode" class="header-icon"></lucide-angular>
+        </div>
+        <div class="header-text">
+          <h1 class="section-title">Gestión de QR</h1>
+          <p class="section-description">Genera y gestiona códigos QR para el registro de asistencias. Solo un código activo a la vez.</p>
+        </div>
+      </div>
+    </div>
+    <div class="header-stats">
+      <div class="stat-card-mini">
+        <lucide-angular [img]="QrCode" class="stat-icon"></lucide-angular>
+        <div class="stat-info">
+          <span class="stat-value">{{ history.length }}</span>
+          <span class="stat-label">Total Códigos</span>
+        </div>
+      </div>
+      <div class="stat-card-mini">
+        <lucide-angular [img]="CheckCircle" class="stat-icon"></lucide-angular>
+        <div class="stat-info">
+          <span class="stat-value">{{ activeQr ? 1 : 0 }}</span>
+          <span class="stat-label">Activo</span>
+        </div>
+      </div>
+      <div class="stat-card-mini">
+        <lucide-angular [img]="Clock" class="stat-icon"></lucide-angular>
+        <div class="stat-info">
+          <span class="stat-value">{{ inactiveQrsCount }}</span>
+          <span class="stat-label">Inactivos</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="qr-content-grid">
+    <!-- Columna izquierda: QR y controles -->
+    <section class="qr-card">
+      <div class="qr-preview">
+        <qrcode *ngIf="qrValue" [qrdata]="qrValue" [width]="qrSize"></qrcode>
+        <div *ngIf="!qrValue" class="placeholder">
+          <lucide-angular [img]="QrCode" class="placeholder-icon"></lucide-angular>
+          <p>No hay QR activo</p>
+        </div>
+      </div>
+
+      <div class="qr-controls">
+        <div class="input-wrapper">
+          <lucide-angular [img]="FileText" class="input-icon"></lucide-angular>
+          <input type="text" [(ngModel)]="inputValue" placeholder="Nombre del QR (opcional)">
+        </div>
+        <button class="btn-generate" (click)="generarQr()">
+          <lucide-angular [img]="QrCode" class="btn-icon"></lucide-angular>
+          <span>Generar Nuevo QR</span>
+        </button>
+      </div>
+
+      <div *ngIf="message" [ngClass]="{'msg-success': messageType==='success','msg-error': messageType==='error'}" class="message">
+        <lucide-angular [img]="messageType === 'success' ? CheckCircle : AlertCircle" class="msg-icon"></lucide-angular>
+        <span>{{ message }}</span>
+      </div>
+    </section>
+
+    <!-- Columna derecha: Historial -->
+    <section class="qr-history" *ngIf="history.length">
+      <div class="history-header">
+        <h2>
+          <lucide-angular [img]="Clock" class="icon-header"></lucide-angular>
+          <span>Historial de Códigos QR</span>
+        </h2>
+        <span class="history-count">{{ history.length }} código(s)</span>
+      </div>
+      <div class="history-list">
+        <div *ngFor="let item of history" class="history-item" [class.active]="item.activo">
+          <div class="history-info">
+            <div class="history-token">
+              <lucide-angular [img]="item.activo ? CheckCircle : XCircle" class="status-icon" [class.active-icon]="item.activo"></lucide-angular>
+              <span [class.inactive]="!item.activo">{{ item.token }}</span>
+            </div>
+            <small class="history-date">
+              <lucide-angular [img]="Calendar" class="date-icon"></lucide-angular>
+              <span>{{ item.fecha_generacion | date:'short' }}</span>
+            </small>
+          </div>
+          <button *ngIf="item.activo" class="btn-deactivate" (click)="desactivarQr(item.id)">
+            <lucide-angular [img]="X" class="btn-icon"></lucide-angular>
+            <span>Desactivar</span>
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>

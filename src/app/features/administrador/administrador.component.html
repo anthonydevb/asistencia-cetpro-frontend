@@ -1,0 +1,139 @@
+<!-- Contenedor principal -->
+<div class="admin-container">
+  <!-- Header Épico de la Sección -->
+  <div class="section-header">
+    <div class="header-main">
+      <div class="header-left">
+        <div class="header-icon-wrapper">
+          <lucide-angular [img]="Users" class="header-icon"></lucide-angular>
+        </div>
+        <div class="header-text">
+          <h1 class="section-title">Administradores Registrados</h1>
+          <p class="section-description">Gestiona y administra los usuarios con permisos de administrador del sistema</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="btn-primary" (click)="openAdminModal()">
+          <lucide-angular [img]="UserPlus" class="icon"></lucide-angular>
+          <span>Registrar Administrador</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+<!-- Modal de registro/edición -->
+<div *ngIf="modalAdminOpen" class="modal-overlay">
+  <div class="modal-container">
+    <form [formGroup]="adminForm" (ngSubmit)="registerAdmin()" class="modal">
+      <div class="modal-header">
+        <h2>{{ editingAdminId ? 'Editar' : 'Registrar' }} Administrador</h2>
+        <button type="button" class="close-btn" (click)="closeAdminModal()">
+          <lucide-angular [img]="X" class="icon"></lucide-angular>
+        </button>
+      </div>
+
+      <div class="form-group">
+        <label for="name">Nombre</label>
+        <input id="name" formControlName="name" placeholder="Ingresa el nombre" />
+        <div class="error-hint" *ngIf="adminForm.get('name')?.invalid && adminForm.get('name')?.touched">
+          El nombre es obligatorio
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input id="email" formControlName="email" type="email" placeholder="correo@ejemplo.com" />
+        <div class="error-hint" *ngIf="adminForm.get('email')?.invalid && adminForm.get('email')?.touched">
+          Introduce un email válido
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Contraseña</label>
+        <div class="password-container">
+          <input id="password" [type]="showPassword ? 'text' : 'password'" formControlName="password" placeholder="********" />
+          <button type="button" class="password-toggle" (click)="togglePasswordVisibility()">
+            <lucide-angular [img]="showPassword ? EyeOff : Eye" class="icon"></lucide-angular>
+          </button>
+        </div>
+        <div class="error-hint" *ngIf="adminForm.get('password')?.invalid && adminForm.get('password')?.touched">
+          {{ editingAdminId ? 'Deja en blanco para mantener la contraseña actual' : 'La contraseña es obligatoria' }}
+        </div>
+      </div>
+
+      <div class="modal-buttons">
+        <button type="submit" class="btn-primary" [disabled]="adminForm.invalid">
+          <lucide-angular [img]="UserPen" class="icon"></lucide-angular>
+          <span>{{ editingAdminId ? 'Actualizar' : 'Registrar' }}</span>
+        </button>
+        <button type="button" class="btn-secondary" (click)="closeAdminModal()">
+          Cancelar
+        </button>
+      </div>
+
+      <div *ngIf="successMessage" class="success-message">
+        <lucide-angular [img]="CheckCircle" class="icon"></lucide-angular>
+        <span>{{ successMessage }}</span>
+      </div>
+      <div *ngIf="errorMessage" class="error-message">
+        <lucide-angular [img]="AlertCircle" class="icon"></lucide-angular>
+        <span>{{ errorMessage }}</span>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Tabla de administradores -->
+<div class="table-container">
+  <div class="table-header">
+    <h3>
+      <lucide-angular [img]="Users" class="icon-header"></lucide-angular>
+      <span>Lista de Administradores</span>
+    </h3>
+    <div class="table-info">
+      <span>{{ admins.length }} administrador{{ admins.length !== 1 ? 'es' : '' }}</span>
+    </div>
+  </div>
+  
+  <div class="table-responsive">
+    <table class="admins-table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Email</th>
+          <th class="actions-header">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let admin of admins; let i = index" [class.even]="i % 2 === 0">
+          <td class="admin-name">
+            <div class="avatar">
+              {{ admin.name.charAt(0).toUpperCase() }}
+            </div>
+            <span>{{ admin.name }}</span>
+          </td>
+          <td>{{ admin.email }}</td>
+          <td class="actions">
+            <button class="edit-btn" (click)="openAdminModal(admin)" title="Editar administrador">
+              <lucide-angular [img]="UserPen" class="icon"></lucide-angular>
+              <span>Editar</span>
+            </button>
+            <button class="delete-btn" (click)="deleteAdmin(admin.id!)" title="Eliminar administrador">
+              <lucide-angular [img]="Trash2" class="icon"></lucide-angular>
+              <span>Eliminar</span>
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="admins.length === 0">
+          <td colspan="3" class="no-data">
+            <div class="no-data-content">
+              <lucide-angular [img]="Users" class="icon"></lucide-angular>
+              <p>No hay administradores registrados</p>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+</div>

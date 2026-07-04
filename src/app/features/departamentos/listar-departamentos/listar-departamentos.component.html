@@ -1,0 +1,164 @@
+<div class="departamentos-container">
+  <!-- Header Épico de la Sección -->
+  <div class="section-header">
+    <div class="header-main">
+      <div class="header-left">
+        <div class="header-icon-wrapper">
+          <lucide-angular [img]="Building2" class="header-icon"></lucide-angular>
+        </div>
+        <div class="header-text">
+          <h1 class="section-title">Gestión de Especialidades</h1>
+          <p class="section-description">Administra y gestiona las especialidades del sistema</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="btn-primary" (click)="openModal()">
+          <lucide-angular [img]="Plus" class="icon"></lucide-angular>
+          <span>Nueva Especialidad</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mensajes -->
+  <div class="success-message" *ngIf="successMessage">
+    <lucide-angular [img]="CheckCircle" class="icon"></lucide-angular>
+    <span>{{ successMessage }}</span>
+  </div>
+
+  <div class="error-message" *ngIf="errorMessage">
+    <lucide-angular [img]="AlertCircle" class="icon"></lucide-angular>
+    <span>{{ errorMessage }}</span>
+  </div>
+
+  <!-- Búsqueda -->
+  <div class="search-section">
+    <div class="search-box">
+      <lucide-angular [img]="Search" class="search-icon"></lucide-angular>
+      <input 
+        type="text" 
+        [(ngModel)]="searchText" 
+        (input)="filterDepartamentos()"
+        placeholder="Buscar por nombre o descripción..."
+        class="search-input"
+      />
+    </div>
+    <div class="table-info" *ngIf="filteredDepartamentos.length > 0">
+      <lucide-angular [img]="Building2" class="icon"></lucide-angular>
+      <span>{{ filteredDepartamentos.length }} especialidad{{ filteredDepartamentos.length !== 1 ? 'es' : '' }}</span>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="table-section">
+    <div class="loading-spinner" *ngIf="loading && departamentos.length === 0">
+      <div class="spinner"></div>
+      <p>Cargando especialidades...</p>
+    </div>
+
+    <div class="table-wrapper" *ngIf="!loading || departamentos.length > 0">
+      <table class="departamentos-table">
+        <thead>
+          <tr>
+            <th>
+              <lucide-angular [img]="FileText" class="icon-header"></lucide-angular>
+              <span>ID</span>
+            </th>
+            <th>
+              <lucide-angular [img]="Building2" class="icon-header"></lucide-angular>
+              <span>Nombre</span>
+            </th>
+            <th>
+              <lucide-angular [img]="FileText" class="icon-header"></lucide-angular>
+              <span>Descripción</span>
+            </th>
+            <th>
+              <lucide-angular [img]="Edit3" class="icon-header"></lucide-angular>
+              <span>Acciones</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let dept of filteredDepartamentos">
+            <td>{{ dept.id }}</td>
+            <td class="nombre-cell">
+              <strong><span>{{ dept.nombre }}</span></strong>
+            </td>
+            <td class="descripcion-cell">
+              <span>{{ dept.descripcion || '—' }}</span>
+            </td>
+            <td class="actions-cell">
+              <button class="btn-edit" (click)="openModal(dept)" title="Editar especialidad">
+                <lucide-angular [img]="Edit3" class="icon"></lucide-angular>
+                <span>Editar</span>
+              </button>
+              <button class="btn-delete" (click)="deleteDepartamento(dept.id!)" title="Eliminar especialidad">
+                <lucide-angular [img]="Trash2" class="icon"></lucide-angular>
+                <span>Eliminar</span>
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="filteredDepartamentos.length === 0">
+            <td colspan="4" class="empty-state">
+              <div class="empty-state-content">
+                <lucide-angular [img]="Building2" class="icon"></lucide-angular>
+                <p>{{ searchText ? 'No se encontraron especialidades' : 'No hay especialidades registradas' }}</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" *ngIf="modalOpen" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>
+          <lucide-angular [img]="Building2" class="icon"></lucide-angular>
+          <span>{{ editingDepartamento ? 'Editar Especialidad' : 'Nueva Especialidad' }}</span>
+        </h2>
+        <button class="btn-close" (click)="closeModal()">
+          <lucide-angular [img]="X" class="icon"></lucide-angular>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label>
+            Nombre <span class="required">*</span>
+          </label>
+          <input 
+            type="text" 
+            [(ngModel)]="formData.nombre"
+            placeholder="Ej: Pastelería, Cocina, Panadería..."
+            class="form-input"
+            [disabled]="loading"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Descripción</label>
+          <textarea 
+            [(ngModel)]="formData.descripcion"
+            placeholder="Descripción de la especialidad..."
+            class="form-textarea"
+            rows="4"
+            [disabled]="loading"
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="closeModal()" [disabled]="loading">
+          Cancelar
+        </button>
+        <button class="btn-save" (click)="saveDepartamento()" [disabled]="loading">
+          <span>{{ loading ? 'Guardando...' : (editingDepartamento ? 'Actualizar' : 'Crear') }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+

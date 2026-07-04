@@ -1,0 +1,205 @@
+<!-- Header Épico de la Sección -->
+<div class="section-header">
+  <div class="header-main">
+    <div class="header-left">
+      <div class="header-icon-wrapper">
+        <lucide-angular [img]="UserPen" class="header-icon"></lucide-angular>
+      </div>
+      <div class="header-text">
+        <h1 class="section-title">Gestión de Profesores</h1>
+        <p class="section-description">Administra y gestiona el registro de profesores del sistema</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="btn-primary" (click)="openProfesorModal()">
+        <lucide-angular [img]="UserRoundPlus" class="icon"></lucide-angular>
+        Registrar Nuevo Profesor
+      </button>
+    </div>
+  </div>
+  <div class="header-stats">
+    <div class="stat-card-mini">
+      <lucide-angular [img]="Users" class="stat-icon"></lucide-angular>
+      <div class="stat-info">
+        <span class="stat-value">{{ totalProfesores }}</span>
+        <span class="stat-label">Profesores</span>
+      </div>
+    </div>
+    <div class="stat-card-mini">
+      <lucide-angular [img]="BookOpen" class="stat-icon"></lucide-angular>
+      <div class="stat-info">
+        <span class="stat-value">{{ departamentos.length }}</span>
+        <span class="stat-label">Especialidades</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de registro/edición -->
+<div *ngIf="modalProfesorOpen" class="modal-overlay">
+  <div class="modal-container animate-fade-in">
+    <form [formGroup]="profesorForm" (ngSubmit)="registrarProfesor()" class="modal">
+      <div class="modal-header">
+        <h2>{{ editingProfesorId ? 'Editar Profesor' : 'Registrar Profesor' }}</h2>
+        <button type="button" class="close-btn" (click)="closeProfesorModal()">
+          <lucide-angular [img]="X" class="icon"></lucide-angular>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Grid de 2 columnas para los campos -->
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Nombre</label>
+            <input
+              type="text"
+              formControlName="name"
+              placeholder="Nombres"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Apellidos</label>
+            <input
+              type="text"
+              formControlName="apellidos"
+              placeholder="Apellidos"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>DNI</label>
+            <input
+              type="text"
+              formControlName="dni"
+              placeholder="DNI del profesor (8 dígitos)"
+              (blur)="onDniBlur()"
+              (input)="onDniInput()"
+              maxlength="8"
+              pattern="[0-9]*"
+            />
+            <small class="form-hint" *ngIf="consultandoDni" style="color: #0066cc;">
+              🔄 Consultando datos del DNI...
+            </small>
+            <small class="form-hint" *ngIf="!consultandoDni && editingProfesorId === null">
+              Ingrese 8 dígitos para buscar automáticamente
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>Teléfono</label>
+            <input
+              type="text"
+              formControlName="phone"
+              placeholder="Número de contacto"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Email <span class="required">*</span></label>
+            <input
+              type="email"
+              formControlName="email"
+              placeholder="correo@ejemplo.com"
+              [readonly]="editingProfesorId !== null"
+            />
+            <small class="form-hint" *ngIf="editingProfesorId !== null">Correo del profesor</small>
+          </div>
+
+          <div class="form-group">
+            <label>Dirección</label>
+            <input
+              type="text"
+              formControlName="address"
+              placeholder="Dirección"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Especialidad <span class="required">*</span></label>
+            <select formControlName="departamentoId" [disabled]="loadingDepartamentos">
+              <option [value]="null">Seleccione una especialidad</option>
+              <option *ngFor="let dept of departamentos" [value]="dept.id">
+                {{ dept.nombre }}
+              </option>
+            </select>
+            <small class="form-hint" *ngIf="loadingDepartamentos">Cargando especialidades...</small>
+          </div>
+
+          <div class="form-group">
+            <label>Horario <span class="required">*</span></label>
+            <select formControlName="horarioId" [disabled]="loadingHorarios">
+              <option [value]="null">Seleccione un horario</option>
+              <option *ngFor="let horario of horarios" [value]="horario.id">
+                {{ horario.hora_entrada }} - {{ horario.hora_salida }}
+              </option>
+            </select>
+            <small class="form-hint" *ngIf="loadingHorarios">Cargando horarios...</small>
+          </div>
+
+          <!-- Contraseña actual (solo en edición) -->
+          <div class="form-group form-group-full" *ngIf="editingProfesorId !== null">
+            <label>Contraseña Actual</label>
+            <div class="password-wrapper">
+              <input
+                [type]="showCurrentPassword ? 'text' : 'password'"
+                formControlName="currentPassword"
+                placeholder="Contraseña actual"
+                readonly
+                class="readonly-input"
+              />
+              <button type="button" class="password-toggle" (click)="toggleCurrentPasswordVisibility()">
+                <lucide-angular [img]="showCurrentPassword ? EyeOff : Eye" class="icon"></lucide-angular>
+              </button>
+            </div>
+            <small class="form-hint">Contraseña actual del profesor (solo lectura)</small>
+          </div>
+
+          <!-- Nueva contraseña -->
+          <div class="form-group form-group-full">
+            <label>
+              {{ editingProfesorId !== null ? 'Nueva Contraseña' : 'Contraseña' }}
+              <span class="required">*</span>
+            </label>
+            <div class="password-wrapper">
+              <input
+                [type]="showNewPassword ? 'text' : 'password'"
+                formControlName="newPassword"
+                [placeholder]="editingProfesorId !== null ? 'Dejar vacío para mantener la actual' : 'Ingrese la contraseña'"
+              />
+              <button type="button" class="password-toggle" (click)="toggleNewPasswordVisibility()">
+                <lucide-angular [img]="showNewPassword ? EyeOff : Eye" class="icon"></lucide-angular>
+              </button>
+            </div>
+            <small class="form-hint" *ngIf="editingProfesorId !== null">
+              Deje vacío si no desea cambiar la contraseña
+            </small>
+            <small class="form-hint" *ngIf="editingProfesorId === null">
+              Contraseña para el acceso del profesor
+            </small>
+          </div>
+        </div>
+
+        <!-- Alertas dentro del body -->
+        <div *ngIf="successMessage" class="alert success">
+          <lucide-angular [img]="CheckCircle" class="icon"></lucide-angular>
+          {{ successMessage }}
+        </div>
+        <div *ngIf="errorMessage" class="alert error">
+          <lucide-angular [img]="AlertCircle" class="icon"></lucide-angular>
+          {{ errorMessage }}
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="submit" class="btn-primary" [disabled]="profesorForm.invalid">
+          {{ editingProfesorId ? 'Actualizar' : 'Registrar' }}
+        </button>
+        <button type="button" class="btn-secondary" (click)="closeProfesorModal()">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Componente listado -->
+<app-listar-profesores (editarProfesor)="onEditarProfesor($event)"></app-listar-profesores>

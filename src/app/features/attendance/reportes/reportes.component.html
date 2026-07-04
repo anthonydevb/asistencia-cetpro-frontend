@@ -1,0 +1,329 @@
+<div class="reportes-container">
+  <!-- Header Épico de la Sección -->
+  <div class="section-header">
+    <div class="header-main">
+      <div class="header-left">
+        <div class="header-icon-wrapper">
+          <lucide-angular [img]="BarChart3" class="header-icon"></lucide-angular>
+        </div>
+        <div class="header-text">
+          <h1 class="section-title">Reportes Históricos de Asistencia</h1>
+          <p class="section-description">Consulta y analiza las asistencias por día, semana o mes. Genera reportes detallados y exporta en múltiples formatos.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters-section">
+    <div class="filters-card">
+      <div class="filters-header">
+        <lucide-angular [img]="Filter" class="icon"></lucide-angular>
+        <h3>Filtros de Búsqueda</h3>
+      </div>
+      <div class="filters-body">
+        <!-- Selector de tipo de reporte -->
+        <div class="filter-group filter-group-full">
+          <label>
+            <lucide-angular [img]="FileText" class="icon-label"></lucide-angular>
+            Tipo de Reporte
+          </label>
+          <select [(ngModel)]="reportType" (change)="onReportTypeChange()">
+            <option value="daily">Diario</option>
+            <option value="weekly">Semanal</option>
+            <option value="monthly">Mensual</option>
+          </select>
+        </div>
+
+        <!-- Filtros de Exportación -->
+        <div class="export-filters-section">
+          <div class="export-filters-header">
+            <lucide-angular [img]="Filter" class="icon"></lucide-angular>
+            <h4>Filtros de Búsqueda y Exportación</h4>
+          </div>
+          <div class="export-filters-body">
+            <!-- Filtros de fecha según tipo de reporte -->
+            <div class="export-filter-row date-filters-row" *ngIf="reportType === 'monthly'">
+              <div class="filter-group">
+                <label>
+                  <lucide-angular [img]="Calendar" class="icon-label"></lucide-angular>
+                  Año
+                </label>
+                <select [(ngModel)]="selectedYear" (change)="onFilterChange()">
+                  <option *ngFor="let year of years" [value]="year">{{ year }}</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label>
+                  <lucide-angular [img]="Calendar" class="icon-label"></lucide-angular>
+                  Mes
+                </label>
+                <select [(ngModel)]="selectedMonth" (change)="onFilterChange()">
+                  <option *ngFor="let mes of meses" [value]="mes.value">{{ mes.nombre }}</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="export-filter-row date-filters-row" *ngIf="reportType === 'daily'">
+              <div class="filter-group filter-group-full">
+                <label>
+                  <lucide-angular [img]="Calendar" class="icon-label"></lucide-angular>
+                  Fecha
+                </label>
+                <input type="date" [(ngModel)]="selectedDate" (change)="onFilterChange()">
+              </div>
+            </div>
+
+            <div class="export-filter-row date-filters-row" *ngIf="reportType === 'weekly'">
+              <div class="filter-group">
+                <label>
+                  <lucide-angular [img]="Calendar" class="icon-label"></lucide-angular>
+                  Inicio de Semana
+                </label>
+                <input type="date" [(ngModel)]="selectedWeekStart" (change)="onWeekStartChange()">
+              </div>
+              <div class="filter-group">
+                <label>
+                  <lucide-angular [img]="Calendar" class="icon-label"></lucide-angular>
+                  Fin de Semana
+                </label>
+                <input type="date" [(ngModel)]="selectedWeekEnd" (change)="onFilterChange()">
+              </div>
+            </div>
+
+            <!-- Fila de checkboxes -->
+            <div class="export-filter-row checkbox-row">
+              <label class="checkbox-label">
+                <input type="checkbox" [(ngModel)]="exportFilters.soloJustificaciones" (change)="onExportFilterChange()">
+                <span>Solo con Justificaciones</span>
+                <span class="filter-count" *ngIf="exportFilters.soloJustificaciones">
+                  {{ getJustificacionesCount() }}
+                </span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" [(ngModel)]="exportFilters.soloTardanzas" (change)="onExportFilterChange()">
+                <span>Solo con Tardanzas</span>
+                <span class="filter-count" *ngIf="exportFilters.soloTardanzas">
+                  {{ getTardanzasCount() }}
+                </span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" [(ngModel)]="exportFilters.soloManuales" (change)="onExportFilterChange()">
+                <span>Solo Marcados Manuales</span>
+                <span class="filter-count" *ngIf="exportFilters.soloManuales">
+                  {{ getManualesCount() }}
+                </span>
+              </label>
+            </div>
+            <!-- Fila de dropdowns -->
+            <div class="export-filter-row dropdown-row">
+              <div class="filter-group">
+                <label>
+                  <lucide-angular [img]="Users" class="icon-label"></lucide-angular>
+                  Especialidad
+                </label>
+                <select [(ngModel)]="exportFilters.departamentoId" (change)="onExportFilterChange()">
+                  <option [value]="null">Todas las Especialidades</option>
+                  <option *ngFor="let dept of departamentos" [value]="dept.id">
+                    {{ dept.nombre }} ({{ getDepartamentoCount(dept.id) }})
+                  </option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label>
+                  <lucide-angular [img]="FileText" class="icon-label"></lucide-angular>
+                  Estado
+                </label>
+                <select [(ngModel)]="exportFilters.estado" (change)="onExportFilterChange()">
+                  <option value="">Todos los Estados</option>
+                  <option value="Completa">Completa ({{ getEstadoCount('Completa') }})</option>
+                  <option value="Justificada">Justificada ({{ getEstadoCount('Justificada') }})</option>
+                  <option value="Pendiente Salida">Pendiente Salida ({{ getEstadoCount('Pendiente Salida') }})</option>
+                  <option value="Sin Entrada">Sin Entrada ({{ getEstadoCount('Sin Entrada') }})</option>
+                  <option value="Ausente">Ausente ({{ getEstadoCount('Ausente') }})</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botones de exportación -->
+        <div class="export-buttons">
+          <button class="btn-export" (click)="exportToCSV()" [disabled]="!asistencias.length || loading">
+            <lucide-angular [img]="Download" class="icon"></lucide-angular>
+            <span>Exportar CSV</span>
+          </button>
+          <button class="btn-export-excel" (click)="exportToExcel()" [disabled]="!asistencias.length || loading">
+            <lucide-angular [img]="Download" class="icon"></lucide-angular>
+            <span>Exportar Excel</span>
+          </button>
+          <button class="btn-export-pdf" (click)="exportToPDF()" [disabled]="!asistencias.length || loading">
+            <lucide-angular [img]="Download" class="icon"></lucide-angular>
+            <span>Exportar PDF</span>
+          </button>
+        </div>
+        <button class="btn-sync" (click)="syncAllAttendances()" [disabled]="syncing || loading">
+          <lucide-angular [img]="Filter" class="icon"></lucide-angular>
+          <span>{{ syncing ? 'Sincronizando...' : 'Sincronizar Datos Históricos' }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mensajes -->
+  <div class="success-message" *ngIf="successMessage">
+    <lucide-angular [img]="CheckCircle" class="icon"></lucide-angular>
+    <span>{{ successMessage }}</span>
+  </div>
+
+  <!-- Estadísticas -->
+  <div class="stats-section" *ngIf="stats">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon info">
+          <lucide-angular [img]="FileText" class="icon"></lucide-angular>
+        </div>
+        <div class="stat-content">
+          <h3>{{ stats.totalReports }}</h3>
+          <p>Total Registros</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon success">
+          <lucide-angular [img]="CheckCircle" class="icon"></lucide-angular>
+        </div>
+        <div class="stat-content">
+          <h3>{{ stats.withEntry }}</h3>
+          <p>Con Entrada</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon success">
+          <lucide-angular [img]="CheckCircle" class="icon"></lucide-angular>
+        </div>
+        <div class="stat-content">
+          <h3>{{ stats.withExit }}</h3>
+          <p>Con Salida</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon info">
+          <lucide-angular [img]="FileText" class="icon"></lucide-angular>
+        </div>
+        <div class="stat-content">
+          <h3>{{ stats.justified }}</h3>
+          <p>Justificadas</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon warning">
+          <lucide-angular [img]="Clock" class="icon"></lucide-angular>
+        </div>
+        <div class="stat-content">
+          <h3>{{ stats.manual }}</h3>
+          <p>Marcados Manuales</p>
+        </div>
+      </div>
+      <div class="stat-card" *ngIf="stats.tardanzas !== undefined">
+        <div class="stat-icon warning">
+          <lucide-angular [img]="Clock" class="icon"></lucide-angular>
+        </div>
+        <div class="stat-content">
+          <h3>{{ stats.tardanzas }}</h3>
+          <p>Tardanzas</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de Asistencias -->
+  <div class="table-section">
+    <div class="table-header">
+      <div class="table-header-left">
+        <h2>
+          <lucide-angular [img]="FileText" class="icon-header"></lucide-angular>
+          <span>{{ getReportTitle() }}</span>
+        </h2>
+        <div class="records-info">
+          <span class="badge" [class.badge-filtered]="hasActiveFilters()">
+            {{ asistenciasFiltradas.length }} de {{ asistencias.length }} registros
+          </span>
+          <span class="filter-indicator" *ngIf="hasActiveFilters()">
+            <lucide-angular [img]="Filter" class="icon-small"></lucide-angular>
+            <span>Filtros activos</span>
+          </span>
+        </div>
+      </div>
+      <button class="btn-clear-filters" *ngIf="hasActiveFilters()" (click)="clearFilters()">
+        <lucide-angular [img]="XCircle" class="icon"></lucide-angular>
+        <span>Limpiar Filtros</span>
+      </button>
+    </div>
+
+    <div class="loading-spinner" *ngIf="loading">
+      <div class="spinner"></div>
+      <p>Cargando reporte...</p>
+    </div>
+
+    <div class="error-message" *ngIf="errorMessage">
+      <lucide-angular [img]="XCircle" class="icon"></lucide-angular>
+      <span>{{ errorMessage }}</span>
+    </div>
+
+    <div class="table-wrapper" *ngIf="!loading && !errorMessage">
+      <table class="reportes-table">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Profesor</th>
+            <th>Especialidad</th>
+            <th>Hora Entrada</th>
+            <th>Hora Salida</th>
+            <th>Actividad</th>
+            <th>Registrado Por</th>
+            <th>Tardanza</th>
+            <th>Estado</th>
+            <th>Justificación</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let att of asistenciasFiltradas" [class]="'row-' + getEstadoColor(att)">
+            <td>{{ formatDate(att.fecha) }}</td>
+            <td class="profesor-cell">
+              <strong>{{ getProfessorName(att) }}</strong>
+            </td>
+            <td>{{ getProfessorSpecialty(att) }}</td>
+            <td>{{ formatTime(att.entryTime) }}</td>
+            <td>{{ formatTime(att.exitTime) }}</td>
+            <td class="activity-cell">{{ att.activity || '—' }}</td>
+            <td>{{ att.markedBy || '—' }}</td>
+            <td>
+              <span class="badge" [class]="att.isLate ? 'badge-warning' : 'badge-success'">
+                {{ att.isLate ? 'Sí' : 'No' }}
+              </span>
+            </td>
+            <td>
+              <span class="badge" [class]="'badge-' + getEstadoColor(att)">
+                {{ getEstadoAsistencia(att) }}
+              </span>
+            </td>
+            <td class="justification-cell">{{ att.justification || '—' }}</td>
+          </tr>
+          <tr *ngIf="asistenciasFiltradas.length === 0 && asistencias.length > 0">
+            <td colspan="10" class="empty-state">
+              <lucide-angular [img]="Filter" class="icon"></lucide-angular>
+              <p>No hay registros que coincidan con los filtros seleccionados</p>
+              <button class="btn-clear-inline" (click)="clearFilters()">Limpiar Filtros</button>
+            </td>
+          </tr>
+          <tr *ngIf="asistencias.length === 0">
+            <td colspan="10" class="empty-state">
+              <lucide-angular [img]="FileText" class="icon"></lucide-angular>
+              <p>No hay asistencias registradas para este período</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

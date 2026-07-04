@@ -1,0 +1,194 @@
+<div class="horarios-container">
+  <!-- Header Épico de la Sección -->
+  <div class="section-header">
+    <div class="header-main">
+      <div class="header-left">
+        <div class="header-icon-wrapper">
+          <lucide-angular [img]="Clock" class="header-icon"></lucide-angular>
+        </div>
+        <div class="header-text">
+          <h1 class="section-title">Gestión de Horarios</h1>
+          <p class="section-description">Administra los horarios de entrada y salida</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="btn-primary" (click)="openModal()">
+          <lucide-angular [img]="Plus" class="icon"></lucide-angular>
+          <span>Nuevo Horario</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mensajes -->
+  <div class="success-message" *ngIf="successMessage">
+    <lucide-angular [img]="CheckCircle" class="icon"></lucide-angular>
+    <span>{{ successMessage }}</span>
+  </div>
+
+  <div class="error-message" *ngIf="errorMessage">
+    <lucide-angular [img]="AlertCircle" class="icon"></lucide-angular>
+    <span>{{ errorMessage }}</span>
+  </div>
+
+  <!-- Búsqueda -->
+  <div class="search-section">
+    <div class="search-box">
+      <lucide-angular [img]="Search" class="search-icon"></lucide-angular>
+      <input 
+        type="text" 
+        [(ngModel)]="searchText" 
+        (input)="filterHorarios()"
+        placeholder="Buscar por hora de entrada o salida..."
+        class="search-input"
+      />
+    </div>
+    <div class="table-info" *ngIf="filteredHorarios.length > 0">
+      <lucide-angular [img]="Clock" class="icon"></lucide-angular>
+      <span>{{ filteredHorarios.length }} horario{{ filteredHorarios.length !== 1 ? 's' : '' }}</span>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="table-section">
+    <div class="loading-spinner" *ngIf="loading && horarios.length === 0">
+      <div class="spinner"></div>
+      <p>Cargando horarios...</p>
+    </div>
+
+    <div class="table-wrapper" *ngIf="!loading || horarios.length > 0">
+      <table class="horarios-table">
+        <thead>
+          <tr>
+            <th>
+              <lucide-angular [img]="FileText" class="icon-header"></lucide-angular>
+              <span>ID</span>
+            </th>
+            <th>
+              <lucide-angular [img]="Clock" class="icon-header"></lucide-angular>
+              <span>Hora de Entrada</span>
+            </th>
+            <th>
+              <lucide-angular [img]="Clock" class="icon-header"></lucide-angular>
+              <span>Hora de Salida</span>
+            </th>
+            <th>
+              <lucide-angular [img]="Clock" class="icon-header"></lucide-angular>
+              <span>Tolerancia Entrada</span>
+            </th>
+            <th>
+              <lucide-angular [img]="Edit3" class="icon-header"></lucide-angular>
+              <span>Acciones</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let horario of filteredHorarios">
+            <td>{{ horario.id }}</td>
+            <td class="time-cell">
+              <strong>{{ formatTime(horario.hora_entrada) }}</strong>
+            </td>
+            <td class="time-cell">
+              <strong>{{ formatTime(horario.hora_salida) }}</strong>
+            </td>
+            <td class="tolerance-cell">
+              <span class="tolerance-badge">{{ horario.tolerancia_entrada ?? 30 }} min</span>
+            </td>
+            <td class="actions-cell">
+              <button class="btn-edit" (click)="openModal(horario)" title="Editar horario">
+                <lucide-angular [img]="Edit3" class="icon"></lucide-angular>
+                <span>Editar</span>
+              </button>
+              <button class="btn-delete" (click)="deleteHorario(horario.id!)" title="Eliminar horario">
+                <lucide-angular [img]="Trash2" class="icon"></lucide-angular>
+                <span>Eliminar</span>
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="filteredHorarios.length === 0">
+            <td colspan="5" class="empty-state">
+              <div class="empty-state-content">
+                <lucide-angular [img]="Clock" class="icon"></lucide-angular>
+                <p>{{ searchText ? 'No se encontraron horarios' : 'No hay horarios registrados' }}</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" *ngIf="modalOpen" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>
+          <lucide-angular [img]="Clock" class="icon"></lucide-angular>
+          <span>{{ editingHorario ? 'Editar Horario' : 'Nuevo Horario' }}</span>
+        </h2>
+        <button class="btn-close" (click)="closeModal()">
+          <lucide-angular [img]="X" class="icon"></lucide-angular>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label>
+            Hora de Entrada <span class="required">*</span>
+          </label>
+          <input 
+            type="time" 
+            [(ngModel)]="formData.hora_entrada"
+            placeholder="08:00"
+            class="form-input"
+            [disabled]="loading"
+            required
+          />
+          <small class="form-hint">Formato: HH:mm (ej: 08:00)</small>
+        </div>
+
+        <div class="form-group">
+          <label>
+            Hora de Salida <span class="required">*</span>
+          </label>
+          <input 
+            type="time" 
+            [(ngModel)]="formData.hora_salida"
+            placeholder="17:00"
+            class="form-input"
+            [disabled]="loading"
+            required
+          />
+          <small class="form-hint">Formato: HH:mm (ej: 17:00)</small>
+        </div>
+
+        <div class="form-group">
+          <label>
+            Tolerancia de Entrada (minutos) <span class="required">*</span>
+          </label>
+          <input 
+            type="number" 
+            [(ngModel)]="formData.tolerancia_entrada"
+            min="0"
+            max="120"
+            placeholder="30"
+            class="form-input"
+            [disabled]="loading"
+            required
+          />
+          <small class="form-hint">Tiempo después de la hora de entrada para considerar tardanza (0-120 minutos)</small>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="closeModal()" [disabled]="loading">
+          Cancelar
+        </button>
+        <button class="btn-save" (click)="saveHorario()" [disabled]="loading">
+          {{ loading ? 'Guardando...' : (editingHorario ? 'Actualizar' : 'Crear') }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+

@@ -1,0 +1,187 @@
+<div class="send-notification-page">
+  <!-- Header Épico de la Sección -->
+  <div class="section-header">
+    <div class="header-main">
+      <div class="header-left">
+        <div class="header-icon-wrapper">
+          <i-lucide [img]="Bell" class="header-icon"></i-lucide>
+        </div>
+        <div class="header-text">
+          <h1 class="section-title">Enviar Notificación</h1>
+          <p class="section-description">Envía mensajes y alertas a los profesores del sistema</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mensajes -->
+  <div class="alert alert-success" *ngIf="success">
+    <i-lucide [img]="CheckCircle" class="icon"></i-lucide>
+    <span>¡Notificación enviada exitosamente!</span>
+  </div>
+
+  <div class="alert alert-error" *ngIf="error">
+    <i-lucide [img]="AlertCircle" class="icon"></i-lucide>
+    <span>{{ error }}</span>
+  </div>
+
+  <div class="form-container">
+    <form (ngSubmit)="enviarNotificacion()">
+      <!-- Destinatarios -->
+      <div class="form-section">
+        <div class="section-header">
+          <i-lucide [img]="Users" class="icon"></i-lucide>
+          <h3>Destinatarios</h3>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <i-lucide [img]="Users" class="label-icon"></i-lucide>
+            <span>Seleccionar destinatarios</span>
+          </label>
+          <select [(ngModel)]="destinatarioSeleccionado" name="destinatario" (change)="onDestinatarioChange()" class="form-select">
+            <option value="all">Todos los profesores ({{ profesores.length }})</option>
+            <option value="custom">Selección personalizada</option>
+            <option value="none">Ninguno</option>
+          </select>
+        </div>
+
+        <div class="loading-state" *ngIf="loading && destinatarioSeleccionado === 'custom'">
+          <p>Cargando usuarios...</p>
+        </div>
+
+        <div class="profesores-list" *ngIf="!loading && destinatarioSeleccionado === 'custom'">
+          <div
+            *ngFor="let profesor of profesores"
+            class="profesor-item"
+            [class.selected]="isProfesorSelected(profesor.id)"
+            (click)="toggleProfesor(profesor.id)"
+          >
+            <div class="profesor-avatar">{{ profesor.name.charAt(0) || '?' }}</div>
+            <div class="profesor-info">
+              <span class="profesor-name">{{ profesor.name }}</span>
+              <span class="profesor-email">{{ profesor.email }}</span>
+              <span class="profesor-role" [ngClass]="{'role-admin': profesor.role === 'admin', 'role-professor': profesor.role === 'professor'}">
+                {{ profesor.role === 'admin' ? 'Admin' : 'Profesor' }}
+                <ng-container *ngIf="profesor.professor && profesor.professor.specialty"> - {{ profesor.professor.specialty }}</ng-container>
+              </span>
+            </div>
+            <div class="checkbox">
+              <input type="checkbox" [checked]="isProfesorSelected(profesor.id)" (click)="$event.stopPropagation()" />
+            </div>
+          </div>
+        </div>
+
+        <div class="selection-summary" *ngIf="profesoresSeleccionados.length > 0">
+          <span>{{ profesoresSeleccionados.length }} destinatario(s) seleccionado(s)</span>
+        </div>
+      </div>
+
+      <!-- Tipo y Prioridad -->
+      <div class="form-row">
+        <div class="form-group">
+          <label>
+            <i-lucide [img]="Bell" class="label-icon"></i-lucide>
+            <span>Tipo de notificación</span>
+          </label>
+          <select [(ngModel)]="tipo" name="tipo" class="form-select">
+            <option [value]="NotificationType.INFO">Información</option>
+            <option [value]="NotificationType.SUCCESS">Éxito</option>
+            <option [value]="NotificationType.WARNING">Advertencia</option>
+            <option [value]="NotificationType.ERROR">Error</option>
+            <option [value]="NotificationType.MESSAGE">Mensaje</option>
+            <option [value]="NotificationType.REMINDER">Recordatorio</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <i-lucide [img]="AlertCircle" class="label-icon"></i-lucide>
+            <span>Prioridad</span>
+          </label>
+          <select [(ngModel)]="prioridad" name="prioridad" class="form-select">
+            <option [value]="NotificationPriority.LOW">Baja</option>
+            <option [value]="NotificationPriority.MEDIUM">Media</option>
+            <option [value]="NotificationPriority.HIGH">Alta</option>
+            <option [value]="NotificationPriority.URGENT">Urgente</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Contenido -->
+      <div class="form-section">
+        <div class="form-group">
+          <label>
+            <i-lucide [img]="FileText" class="label-icon"></i-lucide>
+            <span>Título *</span>
+          </label>
+          <input
+            type="text"
+            [(ngModel)]="titulo"
+            name="titulo"
+            placeholder="Escribe un título claro y conciso"
+            class="form-input"
+            maxlength="100"
+            required
+          />
+          <span class="helper-text">{{ titulo.length }}/100 caracteres</span>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <i-lucide [img]="FileText" class="label-icon"></i-lucide>
+            <span>Mensaje *</span>
+          </label>
+          <textarea
+            [(ngModel)]="mensaje"
+            name="mensaje"
+            placeholder="Escribe tu mensaje aquí..."
+            class="form-textarea"
+            rows="6"
+            maxlength="500"
+            required
+          ></textarea>
+          <span class="helper-text" [class.warning]="caracteresRestantes < 50">
+            {{ caracteresRestantes }} caracteres restantes
+          </span>
+        </div>
+      </div>
+
+      <!-- Vista previa -->
+      <div class="form-section" *ngIf="titulo || mensaje">
+        <h3>Vista Previa</h3>
+        <div class="notification-preview" 
+             [class.preview-info]="tipo === NotificationType.INFO"
+             [class.preview-success]="tipo === NotificationType.SUCCESS"
+             [class.preview-warning]="tipo === NotificationType.WARNING"
+             [class.preview-error]="tipo === NotificationType.ERROR"
+             [class.preview-message]="tipo === NotificationType.MESSAGE"
+             [class.preview-reminder]="tipo === NotificationType.REMINDER">
+          <div class="preview-header">
+            <h4>{{ titulo || 'Título de la notificación' }}</h4>
+            <span class="preview-priority"
+                  [class.priority-low]="prioridad === NotificationPriority.LOW"
+                  [class.priority-medium]="prioridad === NotificationPriority.MEDIUM"
+                  [class.priority-high]="prioridad === NotificationPriority.HIGH"
+                  [class.priority-urgent]="prioridad === NotificationPriority.URGENT">
+              {{ prioridad }}
+            </span>
+          </div>
+          <p>{{ mensaje || 'Contenido del mensaje...' }}</p>
+        </div>
+      </div>
+
+      <!-- Acciones -->
+      <div class="form-actions">
+        <button type="button" class="btn-secondary" (click)="limpiarFormulario()">
+          Limpiar
+        </button>
+        <button type="submit" class="btn-primary" [disabled]="loading">
+          <i-lucide [img]="Send" class="icon"></i-lucide>
+          {{ loading ? 'Enviando...' : 'Enviar Notificación' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+

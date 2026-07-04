@@ -1,0 +1,251 @@
+<div class="modal-overlay" *ngIf="isOpen" (click)="closeModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <form [formGroup]="manualForm" (ngSubmit)="onSubmit()" class="modal-form">
+      <!-- Header -->
+      <div class="modal-header">
+        <div class="header-content">
+          <div class="header-icon">
+            <lucide-angular [img]="UserCheck" class="icon"></lucide-angular>
+          </div>
+          <div>
+            <h2>Marcar Asistencia / Justificar Ausencia</h2>
+            <p>Marcar asistencia manual o justificar ausencia del profesor</p>
+          </div>
+        </div>
+        <button type="button" class="close-btn" (click)="closeModal()">
+          <lucide-angular [img]="X" class="icon"></lucide-angular>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body">
+        <!-- Selección de Profesor -->
+        <div class="form-group">
+          <label>
+            <lucide-angular [img]="User" class="icon-label"></lucide-angular>
+            Seleccionar Profesor <span class="required">*</span>
+          </label>
+          <div class="profesor-selector">
+            <input
+              type="text"
+              [value]="busquedaProfesor"
+              (input)="busquedaProfesor = $any($event.target).value; onBusquedaProfesor()"
+              (focus)="onBusquedaProfesor()"
+              placeholder="Buscar por nombre, DNI o especialidad..."
+              class="profesor-search"
+              [disabled]="hasRealAttendance"
+            />
+            <div class="profesor-dropdown" *ngIf="profesoresFiltrados.length > 0 && !profesorSeleccionado">
+              <div
+                *ngFor="let profesor of profesoresFiltrados"
+                class="profesor-option"
+                (click)="selectProfesor(profesor)"
+              >
+                <div class="profesor-info">
+                  <strong>{{ profesor.name }}</strong>
+                  <span *ngIf="profesor.dni">DNI: {{ profesor.dni }}</span>
+                  <span *ngIf="profesor.departamentoId">{{ getDepartamentoNombre(profesor.departamentoId) }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="profesor-selected" *ngIf="profesorSeleccionado">
+              <div class="selected-info">
+                <strong>{{ profesorSeleccionado.name }}</strong>
+                <span *ngIf="profesorSeleccionado.dni">DNI: {{ profesorSeleccionado.dni }}</span>
+              </div>
+              <button type="button" class="clear-btn" (click)="clearProfesorSelection()">
+                <lucide-angular [img]="X" class="icon-small"></lucide-angular>
+              </button>
+            </div>
+          </div>
+          <input type="hidden" formControlName="profesorId" />
+        </div>
+
+        <!-- Acción a realizar -->
+        <div class="form-group">
+          <label>¿Qué desea hacer? <span class="required">*</span></label>
+          <div class="radio-group">
+            <label class="radio-option">
+              <input type="radio" formControlName="accion" value="mark" />
+              <span class="radio-label">Marcar Asistencia</span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" formControlName="accion" value="justify" />
+              <span class="radio-label">Justificar Ausencia</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Tipo de Marcado (solo si es marcar asistencia) -->
+        <div class="form-group" *ngIf="manualForm.get('accion')?.value === 'mark'">
+          <label>Tipo de Marcado <span class="required">*</span></label>
+          <div class="radio-group">
+            <label class="radio-option">
+              <input type="radio" formControlName="tipo" value="entry" />
+              <span class="radio-label">Entrada</span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" formControlName="tipo" value="exit" />
+              <span class="radio-label">Salida</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Tipo de Justificación (solo si es justificar) -->
+        <div class="form-group" *ngIf="manualForm.get('accion')?.value === 'justify'">
+          <label>Tipo de Justificación <span class="required">*</span></label>
+          <div class="radio-group">
+            <label class="radio-option">
+              <input type="radio" formControlName="tipoJustificacion" value="absence" />
+              <span class="radio-label">Ausencia</span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" formControlName="tipoJustificacion" value="delay" />
+              <span class="radio-label">Retraso</span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" formControlName="tipoJustificacion" value="early_exit" />
+              <span class="radio-label">Salida Temprana</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Fecha y Hora -->
+        <div class="form-row">
+          <div class="form-group">
+            <label>
+              <lucide-angular [img]="Calendar" class="icon-label"></lucide-angular>
+              Fecha <span class="required">*</span>
+            </label>
+            <input type="date" formControlName="fecha" [max]="getTodayDate()" [disabled]="hasRealAttendance" />
+          </div>
+          <div class="form-group" *ngIf="manualForm.get('accion')?.value === 'mark'">
+            <label>
+              <lucide-angular [img]="Clock" class="icon-label"></lucide-angular>
+              Hora <span class="required">*</span>
+            </label>
+            <input type="time" formControlName="hora" [disabled]="hasRealAttendance" />
+          </div>
+        </div>
+
+        <!-- Verificación de asistencia -->
+        <div class="form-group" *ngIf="profesorSeleccionado && manualForm.get('fecha')?.value">
+          <div class="attendance-check" *ngIf="checkingAttendance">
+            <div class="checking-indicator">
+              <span>Verificando asistencia...</span>
+            </div>
+          </div>
+          <div class="attendance-warning" *ngIf="!checkingAttendance && hasRealAttendance">
+            <lucide-angular [img]="AlertCircle" class="warning-icon"></lucide-angular>
+            <div>
+              <strong>Advertencia:</strong> Este profesor ya marcó su asistencia para esta fecha.
+              No se puede marcar manualmente ni justificar.
+            </div>
+          </div>
+        </div>
+
+        <!-- Verificación DNI -->
+        <div class="form-group">
+          <label>
+            <lucide-angular [img]="User" class="icon-label"></lucide-angular>
+            DNI del Profesor (Verificación)
+            <small class="hint">Opcional pero recomendado para verificar identidad</small>
+          </label>
+          <input
+            type="text"
+            formControlName="dni"
+            (blur)="verificarDNI()"
+            placeholder="Ingrese DNI para verificar"
+          />
+        </div>
+
+        <!-- Actividad (solo para marcar asistencia) -->
+        <div class="form-group" *ngIf="manualForm.get('accion')?.value === 'mark'">
+          <label>
+            <lucide-angular [img]="Briefcase" class="icon-label"></lucide-angular>
+            Actividad Realizada (Opcional)
+            <small class="hint" *ngIf="manualForm.get('tipo')?.value === 'exit'">Describe la actividad que realizó el profesor durante la jornada</small>
+            <small class="hint" *ngIf="manualForm.get('tipo')?.value === 'entry'">Actividad planificada para el día (opcional)</small>
+          </label>
+          <textarea
+            formControlName="actividad"
+            rows="3"
+            [placeholder]="manualForm.get('tipo')?.value === 'exit' ? 'Ej: Clase de pastelería, Evaluación práctica, Revisión de proyectos... (Opcional)' : 'Ej: Clase de matemáticas, Taller práctico... (Opcional)'"
+          ></textarea>
+        </div>
+
+        <!-- Justificación -->
+        <div class="form-group">
+          <label>
+            <lucide-angular [img]="FileText" class="icon-label"></lucide-angular>
+            <span *ngIf="manualForm.get('accion')?.value === 'justify'">Justificación <span class="required">*</span></span>
+            <span *ngIf="manualForm.get('accion')?.value === 'mark'">Nota del Administrador (Opcional)</span>
+            <small class="hint" *ngIf="manualForm.get('accion')?.value === 'justify'">Mínimo 10 caracteres. Se guardará como si el profesor hubiera justificado.</small>
+            <small class="hint" *ngIf="manualForm.get('accion')?.value === 'mark'">Razón por la cual se marca manualmente (ej: celular perdido, emergencia, etc.)</small>
+          </label>
+          <textarea
+            formControlName="justificacion"
+            rows="4"
+            [placeholder]="manualForm.get('accion')?.value === 'justify' ? 'Describe el motivo de la ausencia, retraso o salida temprana... (Mínimo 10 caracteres)' : 'Ej: Profesor olvidó su celular, Emergencia familiar, Problema técnico con la app... (Opcional)'"
+            [disabled]="hasRealAttendance"
+          ></textarea>
+        </div>
+        
+        <div class="info-box" *ngIf="manualForm.get('accion')?.value === 'justify'">
+          <lucide-angular [img]="CheckCircle" class="icon-small"></lucide-angular>
+          <p><strong>Importante:</strong> La justificación se guardará como si el profesor la hubiera realizado desde su aplicación móvil. Aparecerá en las fichas de asistencia como justificada por el profesor.</p>
+        </div>
+
+        <!-- Información del Profesor -->
+        <div class="profesor-info-card" *ngIf="profesorSeleccionado">
+          <h3>Información del Profesor</h3>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Nombre:</span>
+              <span class="info-value">{{ profesorSeleccionado.name }}</span>
+            </div>
+            <div class="info-item" *ngIf="profesorSeleccionado.dni">
+              <span class="info-label">DNI:</span>
+              <span class="info-value">{{ profesorSeleccionado.dni }}</span>
+            </div>
+            <div class="info-item" *ngIf="profesorSeleccionado.departamentoId">
+              <span class="info-label">Especialidad:</span>
+              <span class="info-value">{{ getDepartamentoNombre(profesorSeleccionado.departamentoId) }}</span>
+            </div>
+            <div class="info-item" *ngIf="profesorSeleccionado.horarioId">
+              <span class="info-label">Horario:</span>
+              <span class="info-value">{{ getHorarioTexto(profesorSeleccionado.horarioId) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="closeModal()" [disabled]="loading">
+          Cancelar
+        </button>
+        <button type="submit" class="btn-primary" [disabled]="manualForm.invalid || loading || hasRealAttendance || checkingAttendance">
+          <lucide-angular [img]="UserCheck" class="icon-btn"></lucide-angular>
+          <span *ngIf="manualForm.get('accion')?.value === 'justify'">
+            {{ loading ? 'Justificando...' : 'Justificar Ausencia' }}
+          </span>
+          <span *ngIf="manualForm.get('accion')?.value === 'mark'">
+            {{ loading ? 'Marcando...' : 'Confirmar Marcado' }}
+          </span>
+        </button>
+      </div>
+
+      <!-- Alertas -->
+      <div *ngIf="errorMessage" class="alert error">
+        <lucide-angular [img]="AlertCircle" class="icon"></lucide-angular>
+        {{ errorMessage }}
+      </div>
+      <div *ngIf="successMessage" class="alert success">
+        <lucide-angular [img]="CheckCircle" class="icon"></lucide-angular>
+        {{ successMessage }}
+      </div>
+    </form>
+  </div>
+</div>
+

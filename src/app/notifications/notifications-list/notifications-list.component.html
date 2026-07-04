@@ -1,0 +1,135 @@
+<div class="notifications-page">
+  <!-- Header Épico de la Sección -->
+  <div class="section-header">
+    <div class="header-main">
+      <div class="header-left">
+        <div class="header-icon-wrapper">
+          <i-lucide [img]="Bell" class="header-icon"></i-lucide>
+        </div>
+        <div class="header-text">
+          <h1 class="section-title">Notificaciones</h1>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="header-stats">
+          <span class="stat unread">
+            <i-lucide [img]="AlertCircle" class="icon"></i-lucide>
+            <span>{{ unreadCount }} sin leer</span>
+          </span>
+          <span class="stat read">
+            <i-lucide [img]="CheckCircle" class="icon"></i-lucide>
+            <span>{{ readCount }} leídas</span>
+          </span>
+        </div>
+        <div class="header-actions">
+          <button class="btn-action" (click)="markAllAsRead()" *ngIf="unreadCount > 0">
+            <i-lucide [img]="CheckCheck" class="icon"></i-lucide>
+            <span>Marcar todas como leídas</span>
+          </button>
+          <button class="btn-action danger" (click)="deleteAllRead()" *ngIf="readCount > 0">
+            <i-lucide [img]="Trash2" class="icon"></i-lucide>
+            <span>Eliminar leídas</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="filters-section">
+    <div class="search-box">
+      <i-lucide [img]="Search" class="icon"></i-lucide>
+      <input
+        type="text"
+        [(ngModel)]="searchText"
+        (input)="onFilterChange()"
+        placeholder="Buscar notificaciones..."
+      />
+    </div>
+
+    <div class="filter-controls">
+      <label class="checkbox-label">
+        <input type="checkbox" [(ngModel)]="showUnreadOnly" (change)="onFilterChange()" />
+        <span>Solo no leídas</span>
+      </label>
+
+      <select [(ngModel)]="filterType" (change)="onFilterChange()" class="filter-select">
+        <option value="all">Todos los tipos</option>
+        <option value="info">Información</option>
+        <option value="success">Éxito</option>
+        <option value="warning">Advertencia</option>
+        <option value="error">Error</option>
+        <option value="message">Mensaje</option>
+        <option value="reminder">Recordatorio</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="notifications-container">
+    <div *ngIf="filteredNotifications.length === 0" class="empty-state">
+      <i-lucide [img]="Bell" class="empty-icon"></i-lucide>
+      <h3>No hay notificaciones</h3>
+      <p>No se encontraron notificaciones con los filtros aplicados</p>
+    </div>
+
+    <div
+      *ngFor="let notification of filteredNotifications; trackBy: trackByNotificationId"
+      class="notification-card"
+      [class.unread]="!notification.leido"
+      [class.notification-success]="notification.tipo === 'success'"
+      [class.notification-error]="notification.tipo === 'error'"
+      [class.notification-warning]="notification.tipo === 'warning'"
+      [class.notification-info]="notification.tipo === 'info'"
+    >
+      <div class="notification-sidebar"></div>
+      
+      <div class="notification-icon-wrapper">
+        <div class="notification-icon">
+          <i-lucide [img]="getNotificationIcon(notification.tipo)" class="icon"></i-lucide>
+        </div>
+      </div>
+
+      <div class="notification-body">
+        <div class="notification-header">
+          <h3 class="notification-title">{{ notification.titulo }}</h3>
+          <div class="notification-meta">
+            <span class="priority priority-{{ notification.prioridad }}">
+              {{ notification.prioridad }}
+            </span>
+            <span class="notification-time" [title]="getFullDate(notification.fecha_envio)">
+              {{ getTimeAgo(notification.fecha_envio) }}
+            </span>
+          </div>
+        </div>
+
+        <p class="notification-message">{{ notification.mensaje }}</p>
+
+        <div class="notification-footer">
+          <div class="sender-info" *ngIf="notification.remitente">
+            <span class="sender-label">De:</span>
+            <span class="sender-name">{{ notification.remitente.name }}</span>
+          </div>
+          <div class="notification-actions">
+            <button
+              class="action-btn mark-read"
+              (click)="markAsRead(notification)"
+              *ngIf="!notification.leido"
+              title="Marcar como leída"
+            >
+              <i-lucide [img]="Check" class="icon"></i-lucide>
+              Marcar como leída
+            </button>
+            <button
+              class="action-btn delete"
+              (click)="deleteNotification(notification)"
+              title="Eliminar"
+            >
+              <i-lucide [img]="Trash2" class="icon"></i-lucide>
+              Eliminar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

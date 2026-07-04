@@ -1,0 +1,228 @@
+<div class="justificaciones-container">
+  <!-- Header Épico de la Sección -->
+  <div class="section-header">
+    <div class="header-main">
+      <div class="header-left">
+        <div class="header-icon-wrapper">
+          <lucide-angular [img]="FileText" class="header-icon"></lucide-angular>
+        </div>
+        <div class="header-text">
+          <h1 class="section-title">Justificaciones de Ausencias</h1>
+          <p class="section-description">Gestiona las justificaciones enviadas por los profesores</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="header-badge" *ngIf="justificacionesPendientes.length > 0">
+          <lucide-angular [img]="AlertCircle" class="icon"></lucide-angular>
+          <span>{{ justificacionesPendientes.length }} pendientes</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mensajes -->
+  <div class="alert alert-success" *ngIf="successMessage">
+    <lucide-angular [img]="CheckCircle" class="icon"></lucide-angular>
+    {{ successMessage }}
+  </div>
+
+  <div class="alert alert-error" *ngIf="errorMessage">
+    <lucide-angular [img]="XCircle" class="icon"></lucide-angular>
+    {{ errorMessage }}
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters-container">
+    <div class="filter-buttons">
+      <button 
+        class="filter-btn" 
+        [class.active]="filtroEstado === 'pendientes'"
+        (click)="cambiarFiltro('pendientes')">
+        <lucide-angular [img]="Clock" class="icon"></lucide-angular>
+        Pendientes
+        <span class="badge" *ngIf="justificacionesPendientes.length > 0">
+          {{ justificacionesPendientes.length }}
+        </span>
+      </button>
+      <button 
+        class="filter-btn" 
+        [class.active]="filtroEstado === 'aprobadas'"
+        (click)="cambiarFiltro('aprobadas')">
+        <lucide-angular [img]="CheckCircle" class="icon"></lucide-angular>
+        Aprobadas
+      </button>
+      <button 
+        class="filter-btn" 
+        [class.active]="filtroEstado === 'rechazadas'"
+        (click)="cambiarFiltro('rechazadas')">
+        <lucide-angular [img]="XCircle" class="icon"></lucide-angular>
+        Rechazadas
+      </button>
+      <button 
+        class="filter-btn" 
+        [class.active]="filtroEstado === 'todas'"
+        (click)="cambiarFiltro('todas')">
+        <lucide-angular [img]="FileText" class="icon"></lucide-angular>
+        Todas
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-container" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Cargando justificaciones...</p>
+  </div>
+
+  <!-- Lista de justificaciones -->
+  <div class="justificaciones-list" *ngIf="!loading">
+    <!-- Sin justificaciones -->
+    <div class="empty-state" *ngIf="justificaciones.length === 0">
+      <lucide-angular [img]="FileText" class="empty-icon"></lucide-angular>
+      <h3>No hay justificaciones</h3>
+      <p *ngIf="filtroEstado === 'pendientes'">No hay justificaciones pendientes de revisar</p>
+      <p *ngIf="filtroEstado === 'aprobadas'">No hay justificaciones aprobadas</p>
+      <p *ngIf="filtroEstado === 'rechazadas'">No hay justificaciones rechazadas</p>
+      <p *ngIf="filtroEstado === 'todas'">No hay justificaciones registradas</p>
+    </div>
+
+    <!-- Justificaciones -->
+    <div class="justificacion-card" *ngFor="let justificacion of justificaciones">
+      <div class="card-header">
+        <div class="profesor-info">
+          <div class="avatar">
+            <lucide-angular [img]="User" class="icon"></lucide-angular>
+          </div>
+          <div class="info">
+            <h3>{{ justificacion.profesor?.name || 'Profesor' }}</h3>
+            <p>{{ justificacion.profesor?.email }}</p>
+            <p class="specialty" *ngIf="justificacion.profesor?.specialty">
+              {{ justificacion.profesor?.specialty }}
+            </p>
+          </div>
+        </div>
+        <div class="estado-badge" [class]="getEstadoClass(justificacion.estado)">
+          <span *ngIf="justificacion.estado === 'pendiente'">
+            <lucide-angular [img]="Clock" class="icon"></lucide-angular>
+            Pendiente
+          </span>
+          <span *ngIf="justificacion.estado === 'aprobada'">
+            <lucide-angular [img]="CheckCircle" class="icon"></lucide-angular>
+            Aprobada
+          </span>
+          <span *ngIf="justificacion.estado === 'rechazada'">
+            <lucide-angular [img]="XCircle" class="icon"></lucide-angular>
+            Rechazada
+          </span>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="info-row">
+          <div class="info-item">
+            <lucide-angular [img]="Calendar" class="icon"></lucide-angular>
+            <div>
+              <label>Fecha de ausencia</label>
+              <span class="value">{{ formatDate(justificacion.fecha) }}</span>
+            </div>
+          </div>
+          <div class="info-item">
+            <lucide-angular [img]="FileText" class="icon"></lucide-angular>
+            <div>
+              <label>Tipo</label>
+              <span class="value">{{ getTipoLabel(justificacion.tipo) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="descripcion-section">
+          <label>Descripción del motivo</label>
+          <p>{{ justificacion.descripcion }}</p>
+        </div>
+
+        <div class="meta-info">
+          <p class="fecha-creacion">
+            Enviada el: {{ formatDate(justificacion.fechaCreacion) }}
+          </p>
+          <p class="fecha-aprobacion" *ngIf="justificacion.fechaAprobacion">
+            {{ justificacion.estado === 'aprobada' ? 'Aprobada' : 'Rechazada' }} el: 
+            {{ formatDate(justificacion.fechaAprobacion) }}
+          </p>
+          <p class="admin-info" *ngIf="justificacion.admin">
+            Por: {{ justificacion.admin.name }}
+          </p>
+        </div>
+
+        <div class="motivo-rechazo" *ngIf="justificacion.estado === 'rechazada' && justificacion.motivoRechazo">
+          <label>Motivo de rechazo:</label>
+          <p>{{ justificacion.motivoRechazo }}</p>
+        </div>
+      </div>
+
+      <!-- Acciones -->
+      <div class="card-actions" *ngIf="justificacion.estado === 'pendiente'">
+        <button 
+          class="btn btn-success" 
+          (click)="aprobarJustificacion(justificacion)"
+          [disabled]="loading">
+          <lucide-angular [img]="Check" class="icon"></lucide-angular>
+          Aprobar
+        </button>
+        <button 
+          class="btn btn-danger" 
+          (click)="abrirModalRechazo(justificacion)"
+          [disabled]="loading">
+          <lucide-angular [img]="X" class="icon"></lucide-angular>
+          Rechazar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de rechazo -->
+  <div class="modal-overlay" *ngIf="showRechazoModal" (click)="cerrarModalRechazo()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Rechazar Justificación</h2>
+        <button class="close-btn" (click)="cerrarModalRechazo()">
+          <lucide-angular [img]="X" class="icon"></lucide-angular>
+        </button>
+      </div>
+
+      <div class="modal-body" *ngIf="justificacionSeleccionada">
+        <p class="profesor-info">
+          <strong>Profesor:</strong> {{ justificacionSeleccionada.profesor?.name }}<br>
+          <strong>Fecha:</strong> {{ formatDate(justificacionSeleccionada.fecha) }}
+        </p>
+
+        <div class="form-group">
+          <label for="motivoRechazo">
+            Motivo de rechazo <span class="required">*</span>
+          </label>
+          <textarea
+            id="motivoRechazo"
+            [(ngModel)]="motivoRechazo"
+            placeholder="Explica el motivo del rechazo (mínimo 5 caracteres)..."
+            rows="4"
+            [maxlength]="500"
+            class="form-control"></textarea>
+          <small class="hint">Mínimo 5 caracteres. El profesor recibirá este motivo.</small>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="cerrarModalRechazo()" [disabled]="loading">
+          Cancelar
+        </button>
+        <button 
+          class="btn btn-danger" 
+          (click)="rechazarJustificacion()"
+          [disabled]="loading || !motivoRechazo || motivoRechazo.trim().length < 5">
+          <lucide-angular [img]="X" class="icon"></lucide-angular>
+          Rechazar Justificación
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+

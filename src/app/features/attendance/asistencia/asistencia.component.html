@@ -1,0 +1,232 @@
+<div class="asistencia-container">
+  <!-- Header Épico de la Sección -->
+  <div class="section-header">
+    <div class="header-main">
+      <div class="header-left">
+        <div class="header-icon-wrapper">
+          <lucide-angular [img]="CheckSquare" class="header-icon"></lucide-angular>
+        </div>
+        <div class="header-text">
+          <h1 class="section-title">Registro de Asistencias</h1>
+          <p class="section-description">Gestiona y monitorea el registro de asistencia de profesores</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-manual" (click)="openManualMarkModal()" [disabled]="loading">
+          <lucide-angular [img]="UserCheck" class="icon"></lucide-angular>
+          Marcar Manualmente
+        </button>
+        <button class="btn btn-refresh" (click)="refresh()" [disabled]="loading">
+          <lucide-angular [img]="RefreshCw" class="icon"></lucide-angular>
+          Actualizar
+        </button>
+      </div>
+    </div>
+    <div class="header-stats">
+      <div class="stat-card-mini">
+        <lucide-angular [img]="FileText" class="stat-icon"></lucide-angular>
+        <div class="stat-info">
+          <span class="stat-value">{{ totalAsistencias }}</span>
+          <span class="stat-label">Total Registros</span>
+        </div>
+      </div>
+      <div class="stat-card-mini">
+        <lucide-angular [img]="Clock3" class="stat-icon"></lucide-angular>
+        <div class="stat-info">
+          <span class="stat-value">{{ asistenciasHoy }}</span>
+          <span class="stat-label">Hoy</span>
+        </div>
+      </div>
+      <div class="stat-card-mini">
+        <lucide-angular [img]="Users" class="stat-icon"></lucide-angular>
+        <div class="stat-info">
+          <span class="stat-value">{{ filteredAsistencias.length }}</span>
+          <span class="stat-label">Mostrados</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra de búsqueda y filtros -->
+  <div class="search-container">
+    <div class="search-filters-row">
+      <div class="search-box">
+        <lucide-angular [img]="Search" class="search-icon"></lucide-angular>
+        <input
+          type="text"
+          placeholder="Buscar por profesor, especialidad, DNI, fecha, hora, actividad..."
+          [(ngModel)]="searchText"
+          (input)="filterAsistencias()"
+          class="search-input"
+        />
+      </div>
+      <div class="date-filter-box">
+        <lucide-angular [img]="Filter" class="filter-icon"></lucide-angular>
+        <select 
+          [ngModel]="dateFilter" 
+          (ngModelChange)="setDateFilter($event)"
+          class="date-filter-select">
+          <option value="all">Todas las fechas</option>
+          <option value="today">Hoy</option>
+          <option value="7days">Últimos 7 días</option>
+          <option value="30days">Últimos 30 días</option>
+          <option value="90days">Últimos 90 días</option>
+        </select>
+      </div>
+    </div>
+    <div class="stats-info">
+      <div class="stats-badge">
+        <lucide-angular [img]="FileText" class="icon-small"></lucide-angular>
+        <span>{{ filteredAsistencias.length }} registro(s) mostrados</span>
+        <span *ngIf="shouldShowTotal()" class="total-badge">de {{ asistencias.length }} total</span>
+        <span *ngIf="dateFilter !== 'all'" class="filter-badge">
+          ({{ getDateFilterText() }})
+        </span>
+      </div>
+      <button 
+        *ngIf="shouldShowMoreButton()"
+        class="btn btn-show-more" 
+        (click)="toggleShowAll()"
+        [disabled]="loading">
+        {{ getShowAllButtonText() }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabla de asistencias -->
+  <div class="table-wrapper">
+    <div *ngIf="loading" class="loading-container">
+      <div class="spinner"></div>
+      <p>Cargando asistencias...</p>
+    </div>
+
+    <table *ngIf="!loading">
+      <thead>
+        <tr>
+          <th>
+            <lucide-angular [img]="User"></lucide-angular>
+            Profesor
+          </th>
+          <th>
+            <lucide-angular [img]="BookOpen"></lucide-angular>
+            Especialidad
+          </th>
+          <th>
+            <lucide-angular [img]="Calendar"></lucide-angular>
+            Fecha
+          </th>
+          <th>
+            <lucide-angular [img]="LogIn"></lucide-angular>
+            Hora Entrada
+          </th>
+          <th>
+            <lucide-angular [img]="LogOut"></lucide-angular>
+            Hora Salida
+          </th>
+          <th>
+            <lucide-angular [img]="Briefcase"></lucide-angular>
+            Actividad
+          </th>
+          <th>Tardanza</th>
+          <th>Estado</th>
+          <th>
+            <lucide-angular [img]="User"></lucide-angular>
+            Registrado por
+          </th>
+          <th>
+            <lucide-angular [img]="FileText"></lucide-angular>
+            Justificación
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let asistencia of filteredAsistencias">
+          <td>
+            <div class="professor-cell">
+              <lucide-angular [img]="User" class="icon-small"></lucide-angular>
+              <div class="professor-name">{{ getProfessorName(asistencia.professor) }}</div>
+            </div>
+          </td>
+          <td>
+            <div class="specialty-cell">
+              <lucide-angular [img]="BookOpen" class="icon-small"></lucide-angular>
+              <span class="specialty-text">{{ getProfessorSpecialty(asistencia.professor) || '—' }}</span>
+            </div>
+          </td>
+          <td>
+            <div class="date-cell">
+              <lucide-angular [img]="Calendar" class="icon-small"></lucide-angular>
+              <span class="date-text">{{ getDateFromEntryOrExit(asistencia) }}</span>
+            </div>
+          </td>
+          <td>
+            <div class="time-entry" *ngIf="shouldShowEntryTime(asistencia)" [class.late-entry]="asistencia.isLate">
+              <lucide-angular [img]="LogIn" class="icon-small"></lucide-angular>
+              <span class="time-text" [class.no-time]="!asistencia.entryTime" [class.late-time]="asistencia.isLate">
+                {{ formatTime(asistencia.entryTime) }}
+                <span class="late-indicator" *ngIf="asistencia.isLate"> ⚠ Tardanza</span>
+              </span>
+            </div>
+            <span class="empty-cell" *ngIf="!shouldShowEntryTime(asistencia)">—</span>
+          </td>
+          <td>
+            <div class="time-exit" *ngIf="shouldShowExitTime(asistencia)">
+              <lucide-angular [img]="LogOut" class="icon-small"></lucide-angular>
+              <span class="time-text" [class.no-time]="!asistencia.exitTime">{{ formatTime(asistencia.exitTime) }}</span>
+            </div>
+            <span class="empty-cell" *ngIf="!shouldShowExitTime(asistencia)">—</span>
+          </td>
+          <td>
+            <div class="activity-cell" *ngIf="shouldShowActivity(asistencia)">
+              <lucide-angular [img]="Briefcase" class="icon-small"></lucide-angular>
+              <span class="activity-text">{{ getActivity(asistencia.activity) }}</span>
+            </div>
+            <span class="empty-cell" *ngIf="!shouldShowActivity(asistencia)">—</span>
+          </td>
+          <td>
+            <span class="tardanza-badge" *ngIf="asistencia.isLate" [ngClass]="'tardanza-yes'">
+              <lucide-angular [img]="AlertCircle" class="icon-small"></lucide-angular>
+              Sí
+            </span>
+            <span class="tardanza-badge tardanza-no" *ngIf="!asistencia.isLate">
+              <lucide-angular [img]="CheckCircle2" class="icon-small"></lucide-angular>
+              No
+            </span>
+          </td>
+          <td>
+            <span class="status-badge" [ngClass]="getStatusBadgeClass(asistencia)">
+              {{ getStatusText(asistencia) }}
+            </span>
+          </td>
+          <td>
+            <div class="marked-by-cell">
+              <lucide-angular [img]="User" class="icon-small"></lucide-angular>
+              <span class="marked-by-text">{{ getMarkedBy(asistencia.markedBy) }}</span>
+            </div>
+          </td>
+          <td>
+            <div class="justification-cell">
+              <lucide-angular [img]="FileText" class="icon-small"></lucide-angular>
+              <span class="justification-text" [class.absence]="isAbsence(asistencia)">
+                {{ getJustification(asistencia.justification, asistencia) }}
+              </span>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="!loading && filteredAsistencias.length === 0">
+          <td colspan="10" class="empty-state">
+            <lucide-angular [img]="FileText" class="icon-large"></lucide-angular>
+            <p>No se encontraron asistencias</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Modal de Marcado Manual -->
+  <app-manual-mark-modal
+    [isOpen]="showManualMarkModal"
+    (close)="closeManualMarkModal()"
+    (marked)="onManualMarked()">
+  </app-manual-mark-modal>
+</div>

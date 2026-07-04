@@ -1,0 +1,769 @@
+.listar-profesores-container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0;
+  animation: fadeIn 0.3s ease-out;
+  box-sizing: border-box;
+  // El ancho está controlado por el layout principal
+
+  .controls-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+    padding: 0;
+  }
+
+  .search-input {
+    width: 100%;
+    max-width: 500px;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    border: 2px solid #e5e7eb;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    font-weight: 500;
+
+    &:focus {
+      outline: none;
+      border-color: #FF6B35;
+      box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+    }
+
+    &::placeholder {
+      color: #9ca3af;
+    }
+  }
+
+  // Sección de exportación
+  .export-section {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(255, 107, 53, 0.1);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+
+    &:hover {
+      box-shadow: 0 6px 20px rgba(255, 107, 53, 0.12);
+    }
+
+    .export-filters {
+      .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+
+        label {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-weight: 600;
+          color: #374151;
+          font-size: 0.875rem;
+
+          .icon-label {
+            width: 16px;
+            height: 16px;
+            color: #FF6B35;
+          }
+        }
+
+        .filter-select {
+          padding: 0.75rem 1rem;
+          border-radius: 8px;
+          border: 2px solid #e5e7eb;
+          font-size: 0.875rem;
+          background: white;
+          transition: all 0.2s ease;
+          cursor: pointer;
+          max-width: 400px;
+
+          &:focus {
+            outline: none;
+            border-color: #FF6B35;
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+          }
+
+          &:hover {
+            border-color: #FF6B35;
+          }
+        }
+      }
+    }
+
+    .export-buttons {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+
+      button {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        border: none;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+        .icon {
+          width: 16px;
+          height: 16px;
+        }
+
+        &:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        &:not(:disabled):hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        &:not(:disabled):active {
+          transform: translateY(0);
+        }
+      }
+
+      .btn-export-csv {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+
+        &:not(:disabled):hover {
+          background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        }
+      }
+
+      .btn-export-excel {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: white;
+
+        &:not(:disabled):hover {
+          background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        }
+      }
+
+      .btn-export-pdf {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+
+        &:not(:disabled):hover {
+          background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        }
+      }
+    }
+  }
+
+  // Mensajes de éxito/error
+  .success-message,
+  .error-message {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    animation: slideDown 0.3s ease-out;
+
+    .icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+  }
+
+  .success-message {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #10b981;
+
+    .icon {
+      color: #10b981;
+    }
+  }
+
+  .error-message {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #ef4444;
+
+    .icon {
+      color: #ef4444;
+    }
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+    overflow-y: visible;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    background: white;
+    min-height: 400px;
+    position: relative;
+    max-width: 100%;
+    margin: 0;
+    border: 1px solid rgba(255, 107, 53, 0.1);
+    width: 100%;
+    
+    // Mejorar el scrollbar para Chrome, Safari y Edge
+    &::-webkit-scrollbar {
+      height: 12px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 10px;
+      margin: 0 10px;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: linear-gradient(135deg, #FF6B35 0%, #E85A2B 100%);
+      border-radius: 10px;
+      border: 2px solid #f1f5f9;
+      
+      &:hover {
+        background: linear-gradient(135deg, #FF8C5A 0%, #FF6B35 100%);
+      }
+    }
+    
+    // Scrollbar para Firefox
+    scrollbar-width: thin;
+    scrollbar-color: #FF6B35 #f1f5f9;
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      min-width: 1200px;
+
+      thead {
+        background: linear-gradient(135deg, #FF6B35 0%, #E85A2B 100%);
+        color: white;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+
+        th {
+          padding: 1rem 1rem;
+          text-align: left;
+          font-weight: 600;
+          font-size: 0.8rem;
+          text-transform: uppercase;
+          letter-spacing: 0.03em;
+          white-space: nowrap;
+          vertical-align: middle;
+          line-height: 1.5;
+          
+          // Anchos específicos para cada columna
+          &:nth-child(1) { width: 12%; } // Nombre
+          &:nth-child(2) { width: 9%; } // DNI
+          &:nth-child(3) { width: 9%; } // Teléfono
+          &:nth-child(4) { width: 11%; } // Dirección
+          &:nth-child(5) { width: 15%; } // Departamento
+          &:nth-child(6) { width: 15%; } // Horario
+          &:nth-child(7) { width: 11%; } // Contraseña
+          &:nth-child(8) { 
+            width: 17%;
+            min-width: 140px;
+            text-align: center;
+            padding: 1rem 0.75rem;
+          } // Acciones
+
+          lucide-angular {
+            width: 18px;
+            height: 18px;
+            opacity: 1;
+            display: inline-flex;
+            align-items: center;
+            vertical-align: middle;
+            margin-right: 0.5rem;
+          }
+        }
+      }
+
+      tbody {
+        tr {
+          transition: all 0.2s ease;
+          border-bottom: 1px solid #e5e7eb;
+
+          &:hover {
+            background: #f9fafb;
+          }
+
+          &:last-child {
+            border-bottom: none;
+          }
+        }
+
+        td {
+          padding: 0.875rem 1rem;
+          text-align: left;
+          vertical-align: middle;
+          font-size: 0.875rem;
+          color: #374151;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          line-height: 1.5;
+
+          lucide-angular {
+            width: 18px;
+            height: 18px;
+            color: #FF6B35;
+            display: inline-flex;
+            align-items: center;
+            vertical-align: middle;
+            margin-right: 0.5rem;
+            flex-shrink: 0;
+          }
+        }
+        
+        // Estilos específicos para cada tipo de celda
+        .profesor-name-cell,
+        .address-cell,
+        .specialty-cell,
+        .dni-cell,
+        .phone-cell {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          
+          span {
+            display: inline-block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: calc(100% - 30px);
+            vertical-align: middle;
+            line-height: 1.5;
+          }
+          
+          lucide-angular {
+            flex-shrink: 0;
+        }
+      }
+
+        .entry-time-cell {
+          font-family: 'Courier New', monospace;
+          font-weight: 500;
+          color: #10b981;
+          
+          lucide-angular {
+            color: #10b981;
+          }
+          
+          span {
+            display: inline-block;
+            vertical-align: middle;
+            line-height: 1.5;
+          }
+        }
+        
+        .exit-time-cell {
+          font-family: 'Courier New', monospace;
+          font-weight: 500;
+          color: #ef4444;
+          
+          lucide-angular {
+            color: #ef4444;
+          }
+        }
+        
+        // Celda de acciones - sobrescribir estilos generales
+        .acciones-cell {
+          text-align: center !important;
+          padding: 0.875rem 0.75rem !important;
+          overflow: visible !important;
+          white-space: nowrap !important;
+        }
+        
+        .password-cell {
+          white-space: nowrap;
+
+          lucide-angular {
+            flex-shrink: 0;
+          }
+
+          span {
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1.5px;
+            color: #6b7280;
+            font-size: 0.875rem;
+            display: inline-block;
+            vertical-align: middle;
+            line-height: 1.5;
+          }
+        }
+        
+        .empty-state {
+          text-align: center;
+          padding: 3rem 2rem;
+          color: #9ca3af;
+          
+          p {
+            font-size: 1rem;
+            margin: 0;
+          }
+        }
+      }
+      
+      // Contenedor de botones dentro de la celda de acciones
+      .acciones-buttons {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0.5rem;
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        flex-wrap: nowrap;
+
+        button {
+          border: none !important;
+          background: transparent;
+          cursor: pointer;
+          padding: 0;
+          border-radius: 6px;
+          display: flex !important;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s ease;
+          width: 36px;
+          height: 36px;
+          min-width: 36px;
+          min-height: 36px;
+          flex-shrink: 0;
+          box-sizing: border-box;
+          line-height: 1;
+          margin: 0;
+
+          lucide-angular {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+          }
+        }
+
+        .btn-edit {
+          color: #FF6B35 !important;
+          background: rgba(255, 107, 53, 0.1) !important;
+
+          &:hover {
+            background: #FF6B35 !important;
+            color: white !important;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(255, 107, 53, 0.3);
+          }
+
+          &:active {
+            transform: translateY(0);
+          }
+        }
+
+        .btn-view {
+          color: #10b981 !important;
+          background: rgba(16, 185, 129, 0.1) !important;
+
+          &:hover {
+            background: #10b981 !important;
+            color: white !important;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+          }
+
+          &:active {
+            transform: translateY(0);
+          }
+        }
+
+        .btn-delete {
+          color: #ef4444 !important;
+          background: rgba(239, 68, 68, 0.1) !important;
+
+          &:hover {
+            background: #ef4444 !important;
+            color: white !important;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);
+          }
+
+          &:active {
+            transform: translateY(0);
+          }
+        }
+      }
+    }
+  }
+}
+
+// Estilos del Modal de Detalles
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease-out;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease-out;
+  display: flex;
+  flex-direction: column;
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 2rem;
+    border-bottom: 2px solid #e5e7eb;
+    background: linear-gradient(135deg, #FF6B35 0%, #E85A2B 100%);
+    color: white;
+    border-radius: 16px 16px 0 0;
+
+    h2 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .btn-close {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      border-radius: 8px;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: white;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: rotate(90deg);
+      }
+
+      lucide-angular {
+        width: 20px;
+        height: 20px;
+      }
+    }
+  }
+
+  .modal-body {
+    padding: 2rem;
+    flex: 1;
+    overflow-y: auto;
+
+    .loading-spinner {
+      text-align: center;
+      padding: 3rem;
+      color: #6b7280;
+
+      p {
+        font-size: 1.1rem;
+      }
+    }
+
+    .details-grid {
+      display: grid;
+      gap: 1.5rem;
+
+      .detail-section {
+        background: #f9fafb;
+        border-radius: 12px;
+        padding: 1.5rem;
+        border: 1px solid #e5e7eb;
+
+        h3 {
+          margin: 0 0 1rem 0;
+          font-size: 1.1rem;
+          font-weight: 600;
+          color: #374151;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding-bottom: 0.75rem;
+          border-bottom: 2px solid #e5e7eb;
+
+          lucide-angular {
+            width: 18px;
+            height: 18px;
+            color: #FF6B35;
+          }
+        }
+
+        .detail-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 0.75rem 0;
+          border-bottom: 1px solid #e5e7eb;
+
+          &:last-child {
+            border-bottom: none;
+          }
+
+          .detail-label {
+            font-weight: 500;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex: 1;
+
+            lucide-angular {
+              width: 16px;
+              height: 16px;
+              color: #FF6B35;
+            }
+          }
+
+          .detail-value {
+            font-weight: 600;
+            color: #111827;
+            text-align: right;
+            flex: 1;
+          }
+        }
+
+        .materias-list,
+        .horarios-list {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+          margin-top: 0.5rem;
+
+          .materia-item,
+          .horario-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s ease;
+
+            &:hover {
+              box-shadow: 0 2px 8px rgba(255, 107, 53, 0.1);
+              transform: translateX(4px);
+            }
+
+            .materia-name {
+              font-weight: 600;
+              color: #111827;
+            }
+
+            .materia-code {
+              color: #6b7280;
+              font-size: 0.875rem;
+              margin-left: 0.5rem;
+            }
+
+            .horario-info {
+              display: flex;
+              flex-wrap: wrap;
+              gap: 0.75rem;
+              align-items: center;
+
+              .horario-day {
+                font-weight: 600;
+                color: #FF6B35;
+                background: rgba(255, 107, 53, 0.1);
+                padding: 0.25rem 0.75rem;
+                border-radius: 6px;
+                font-size: 0.875rem;
+              }
+
+              .horario-time {
+                font-family: 'Courier New', monospace;
+                font-weight: 500;
+                color: #10b981;
+                background: rgba(16, 185, 129, 0.1);
+                padding: 0.25rem 0.75rem;
+                border-radius: 6px;
+                font-size: 0.875rem;
+              }
+
+              .horario-materia {
+                color: #374151;
+                font-weight: 500;
+              }
+
+              .horario-aula {
+                color: #6b7280;
+                font-size: 0.875rem;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

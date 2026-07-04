@@ -1,0 +1,116 @@
+<div class="app-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar" [class.collapsed]="isCollapsed">
+    
+    <!-- Header -->
+    <div class="sidebar-header">
+      <div class="logo">
+        <lucide-angular [img]="GraduationCap" class="logo-icon"></lucide-angular>
+        <div class="logo-text" *ngIf="!isCollapsed">
+          <h2>Sistema de Asistencia</h2>
+          <p>CETPRO VIRGEN DE FATIMA </p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <app-notification-bell *ngIf="!isCollapsed"></app-notification-bell>
+        <button class="toggle-btn" (click)="toggleSidebar()">
+          <lucide-angular [img]="Menu"></lucide-angular>
+        </button>
+      </div>
+    </div>
+
+    <!-- Menú -->
+    <nav class="sidebar-nav">
+      <ul>
+        <li routerLink="/dashboard" routerLinkActive="active">
+          <a>
+            <lucide-angular [img]="LayoutDashboard" class="icon"></lucide-angular>
+            <span class="title" *ngIf="!isCollapsed">Dashboard</span>
+          </a>
+        </li>
+        <li routerLink="/profesores" routerLinkActive="active">
+          <a>
+            <lucide-angular [img]="UserPen" class="icon"></lucide-angular>
+            <span class="title" *ngIf="!isCollapsed">Profesores</span>
+          </a>
+        </li>
+        <li routerLink="/asistencia" routerLinkActive="active">
+          <a>
+            <lucide-angular [img]="CheckSquare" class="icon"></lucide-angular>
+            <span class="title" *ngIf="!isCollapsed">Asistencia</span>
+          </a>
+        </li>
+        <li routerLink="/qr" routerLinkActive="active">
+          <a>
+            <lucide-angular [img]="QrCode" class="icon"></lucide-angular>
+            <span class="title" *ngIf="!isCollapsed">Códigos QR</span>
+          </a>
+        </li>
+        <li routerLink="/reportes" routerLinkActive="active">
+          <a>
+            <lucide-angular [img]="BarChart3" class="icon"></lucide-angular>
+            <span class="title" *ngIf="!isCollapsed">Reportes</span>
+          </a>
+        </li>
+        <li routerLink="/administrador" routerLinkActive="active">
+          <a>
+            <lucide-angular [img]="ShieldUser" class="icon"></lucide-angular>
+            <span class="title" *ngIf="!isCollapsed">Administradores</span>
+          </a>
+        </li>
+        <li routerLink="/departamentos" routerLinkActive="active">
+          <a>
+            <lucide-angular [img]="Building2" class="icon"></lucide-angular>
+            <span class="title" *ngIf="!isCollapsed">Especialidades</span>
+          </a>
+        </li>
+        <li routerLink="/horarios" routerLinkActive="active">
+          <a>
+            <lucide-angular [img]="Clock" class="icon"></lucide-angular>
+            <span class="title" *ngIf="!isCollapsed">Horarios</span>
+          </a>
+        </li>
+        <li routerLink="/notifications" routerLinkActive="active">
+          <a>
+            <lucide-angular [img]="Bell" class="icon"></lucide-angular>
+            <span class="title" *ngIf="!isCollapsed">Notificaciones</span>
+          </a>
+        </li>
+        <li routerLink="/send-notification" routerLinkActive="active">
+          <a>
+            <lucide-angular [img]="Send" class="icon"></lucide-angular>
+            <span class="title" *ngIf="!isCollapsed">Enviar Notificación</span>
+          </a>
+        </li>
+        <li routerLink="/justificaciones" routerLinkActive="active">
+          <a>
+            <lucide-angular [img]="FileText" class="icon"></lucide-angular>
+            <span class="title" *ngIf="!isCollapsed">Justificaciones</span>
+          </a>
+        </li>
+        
+        
+      </ul>
+    </nav>
+
+    <!-- Footer -->
+    <div class="sidebar-footer" *ngIf="!isCollapsed">
+      <div class="user-info">
+        <div class="avatar">{{ getUserInitial() }}</div>
+        <div class="details">
+          <span class="name">{{ getUserName() }}</span>
+          <span class="email">{{ getUserEmail() }}</span>
+        </div>
+      </div>
+      <button class="logout-btn" (click)="logout()">
+        <lucide-angular [img]="LogOut"></lucide-angular>
+        <span class="title">Salir</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Contenido principal -->
+  <main class="layout-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

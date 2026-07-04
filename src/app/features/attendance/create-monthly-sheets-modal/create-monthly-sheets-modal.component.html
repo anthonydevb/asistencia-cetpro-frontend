@@ -1,0 +1,155 @@
+<div class="modal-overlay" *ngIf="isOpen" (click)="closeModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="modal-title">
+        <i-lucide [img]="FileText" class="icon-title"></i-lucide>
+        <h2>Crear Hojas de Asistencia Mensuales</h2>
+      </div>
+      <button class="close-btn" (click)="closeModal()" [disabled]="loading">
+        <i-lucide [img]="X" class="icon"></i-lucide>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="modal-body">
+      <form [formGroup]="monthlyForm" (ngSubmit)="onSubmit()">
+        <!-- Mes y Año -->
+        <div class="form-group">
+          <label>
+            <i-lucide [img]="Calendar" class="icon-label"></i-lucide>
+            Mes
+          </label>
+          <select formControlName="mes" [disabled]="loading">
+            <option *ngFor="let mes of meses" [value]="mes.value">{{ mes.nombre }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <i-lucide [img]="Calendar" class="icon-label"></i-lucide>
+            Año
+          </label>
+          <input 
+            type="number" 
+            formControlName="año" 
+            [disabled]="loading"
+            min="2000"
+            max="2100"
+            placeholder="2025"
+          />
+        </div>
+
+        <!-- Selección de profesores -->
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input 
+              type="checkbox" 
+              formControlName="todosProfesores"
+              [disabled]="loading"
+            />
+            <span>Crear para todos los profesores</span>
+          </label>
+        </div>
+
+        <!-- Selección individual de profesores -->
+        <div class="form-group" *ngIf="mostrarSeleccionProfesores">
+          <label>
+            <i-lucide [img]="Users" class="icon-label"></i-lucide>
+            Seleccionar Profesores
+          </label>
+          
+          <div class="profesores-selector">
+            <!-- Búsqueda -->
+            <div class="search-box" [formGroup]="busquedaForm">
+              <input 
+                type="text" 
+                formControlName="busqueda"
+                placeholder="Buscar profesor..."
+                [disabled]="loading"
+              />
+            </div>
+
+            <!-- Botón seleccionar todos -->
+            <button 
+              type="button" 
+              class="btn-select-all"
+              (click)="seleccionarTodos()"
+              [disabled]="loading"
+            >
+              {{ profesoresSeleccionados.length === profesores.length ? 'Deseleccionar Todos' : 'Seleccionar Todos' }}
+            </button>
+
+            <!-- Lista de profesores -->
+            <div class="profesores-list">
+              <div 
+                *ngFor="let profesor of getProfesoresFiltrados()" 
+                class="profesor-item"
+                [class.selected]="isProfesorSeleccionado(profesor)"
+                (click)="toggleProfesor(profesor)"
+              >
+                <input 
+                  type="checkbox" 
+                  [checked]="isProfesorSeleccionado(profesor)"
+                  (change)="toggleProfesor(profesor)"
+                  [disabled]="loading"
+                />
+                <div class="profesor-info">
+                  <span class="profesor-name">{{ profesor.name }}</span>
+                  <span class="profesor-specialty" *ngIf="profesor.departamentoId">{{ getDepartamentoNombre(profesor.departamentoId) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="selected-count" *ngIf="profesoresSeleccionados.length > 0">
+              {{ profesoresSeleccionados.length }} profesor(es) seleccionado(s)
+            </div>
+          </div>
+        </div>
+
+        <!-- Información -->
+        <div class="info-box">
+          <i-lucide [img]="AlertCircle" class="icon-info"></i-lucide>
+          <p>
+            Se crearán hojas de asistencia para todos los días hábiles (lunes a viernes) 
+            del mes de <strong>{{ getMesNombre() }} {{ monthlyForm.get('año')?.value }}</strong>.
+            Los días que ya tienen asistencias registradas serán omitidos.
+          </p>
+        </div>
+
+        <!-- Mensajes de error y éxito -->
+        <div class="alert alert-error" *ngIf="errorMessage">
+          <i-lucide [img]="AlertCircle" class="icon"></i-lucide>
+          <span>{{ errorMessage }}</span>
+        </div>
+
+        <div class="alert alert-success" *ngIf="successMessage">
+          <i-lucide [img]="CheckCircle" class="icon"></i-lucide>
+          <span [innerHTML]="getFormattedSuccessMessage()"></span>
+        </div>
+
+        <!-- Acciones -->
+        <div class="modal-actions">
+          <button 
+            type="button" 
+            class="btn-cancel" 
+            (click)="closeModal()"
+            [disabled]="loading"
+          >
+            Cancelar
+          </button>
+          <button 
+            type="submit" 
+            class="btn-submit"
+            [disabled]="loading || monthlyForm.invalid"
+          >
+            <i-lucide [img]="CheckCircle" class="icon" *ngIf="!loading"></i-lucide>
+            <span *ngIf="loading">Creando...</span>
+            <span *ngIf="!loading">Crear Hojas de Asistencia</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+

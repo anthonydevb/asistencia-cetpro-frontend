@@ -1,0 +1,83 @@
+<div class="notification-bell-container">
+  <button class="bell-button" (click)="toggleDrawer()" [class.has-notifications]="unreadCount > 0">
+    <i-lucide [img]="Bell" class="bell-icon"></i-lucide>
+    <span class="badge" *ngIf="unreadCount > 0">{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
+  </button>
+
+  <!-- Overlay -->
+  <div class="drawer-overlay" *ngIf="showDrawer" (click)="closeDrawer()"></div>
+
+  <!-- Drawer Panel -->
+  <div class="drawer" [class.open]="showDrawer">
+    <div class="drawer-header">
+      <h3>Notificaciones</h3>
+      <button class="close-btn" (click)="closeDrawer()">
+        <i-lucide [img]="X" class="icon"></i-lucide>
+      </button>
+    </div>
+
+    <div class="drawer-actions" *ngIf="unreadCount > 0">
+      <button class="action-btn" (click)="markAllAsRead()">
+        <i-lucide [img]="CheckCheck" class="icon"></i-lucide>
+        Marcar todas como leídas
+      </button>
+    </div>
+
+    <div class="notifications-list">
+      <div *ngIf="recentNotifications.length === 0" class="empty-state">
+        <i-lucide [img]="Bell" class="empty-icon"></i-lucide>
+        <p>No tienes notificaciones</p>
+      </div>
+
+      <div
+        *ngFor="let notification of recentNotifications; trackBy: trackByNotificationId"
+        class="notification-item"
+        [ngClass]="getNotificationClass(notification)"
+        (click)="markAsRead(notification, $event)"
+      >
+        <div class="notification-icon">
+          <i-lucide [img]="getNotificationIcon(notification.tipo)" class="icon"></i-lucide>
+        </div>
+        <div class="notification-content">
+          <div class="notification-header">
+            <h4 class="notification-title">{{ notification.titulo }}</h4>
+            <span class="notification-time">{{ getTimeAgo(notification.fecha_envio) }}</span>
+          </div>
+          <p class="notification-message">{{ notification.mensaje }}</p>
+          <div class="notification-footer">
+            <span class="notification-priority priority-{{ notification.prioridad }}">
+              {{ notification.prioridad }}
+            </span>
+            <span class="notification-sender" *ngIf="notification.remitente">
+              De: {{ notification.remitente.name }}
+            </span>
+          </div>
+        </div>
+        <div class="notification-actions">
+          <button
+            class="action-icon-btn"
+            (click)="markAsRead(notification, $event)"
+            *ngIf="!notification.leido"
+            title="Marcar como leída"
+          >
+            <i-lucide [img]="Check" class="icon"></i-lucide>
+          </button>
+          <button
+            class="action-icon-btn delete"
+            (click)="deleteNotification(notification, $event)"
+            title="Eliminar"
+          >
+            <i-lucide [img]="Trash2" class="icon"></i-lucide>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="drawer-footer" *ngIf="notifications.length > 5">
+      <button class="view-all-btn" (click)="viewAll()">
+        Ver todas las notificaciones ({{ notifications.length }})
+      </button>
+    </div>
+  </div>
+</div>
+

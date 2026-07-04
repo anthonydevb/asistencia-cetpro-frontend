@@ -1,0 +1,231 @@
+<div class="listar-profesores-container">
+  <!-- Controles de búsqueda y exportación -->
+  <div class="controls-section">
+    <input
+      type="text"
+      placeholder="Buscar por nombre, DNI, teléfono, especialidad, horario..."
+      [(ngModel)]="searchText"
+      (input)="filterProfesores()"
+      class="search-input"
+    />
+
+    <!-- Sección de exportación -->
+    <div class="export-section">
+      <div class="export-filters">
+        <div class="filter-group">
+          <label>
+            <lucide-angular [img]="BookOpen" class="icon-label"></lucide-angular>
+            Filtrar por Especialidad
+          </label>
+          <select [(ngModel)]="exportFilterDepartamentoId" class="filter-select" [disabled]="departamentos.length === 0">
+            <option [ngValue]="null">Todas las Especialidades ({{ profesores.length }})</option>
+            <option *ngFor="let dept of departamentos" [ngValue]="dept.id">
+              {{ dept.nombre }} ({{ getDepartamentoCount(dept.id) }})
+            </option>
+            <option *ngIf="departamentos.length === 0" disabled>No hay especialidades disponibles</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Botones de exportación -->
+      <div class="export-buttons">
+        <button class="btn-export-csv" (click)="exportToCSV()" [disabled]="!profesores.length">
+          <lucide-angular [img]="Download" class="icon"></lucide-angular>
+          Exportar CSV
+        </button>
+        <button class="btn-export-excel" (click)="exportToExcel()" [disabled]="!profesores.length">
+          <lucide-angular [img]="Download" class="icon"></lucide-angular>
+          Exportar Excel
+        </button>
+        <button class="btn-export-pdf" (click)="exportToPDF()" [disabled]="!profesores.length">
+          <lucide-angular [img]="Download" class="icon"></lucide-angular>
+          Exportar PDF
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mensajes de éxito/error -->
+  <div class="success-message" *ngIf="successMessage">
+    <lucide-angular [img]="BookOpen" class="icon"></lucide-angular>
+    {{ successMessage }}
+  </div>
+  <div class="error-message" *ngIf="errorMessage">
+    <lucide-angular [img]="X" class="icon"></lucide-angular>
+    {{ errorMessage }}
+  </div>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th><lucide-angular [img]="UserRound"></lucide-angular> Nombre</th>
+          <th><lucide-angular [img]="IdCard"></lucide-angular> DNI</th>
+          <th><lucide-angular [img]="Phone"></lucide-angular> Teléfono</th>
+          <th><lucide-angular [img]="Home"></lucide-angular> Dirección</th>
+          <th><lucide-angular [img]="BookOpen"></lucide-angular> Especialidad</th>
+          <th><lucide-angular [img]="LogIn"></lucide-angular> Horario</th>
+          <th><lucide-angular [img]="Lock"></lucide-angular> Contraseña</th>
+          <th><lucide-angular [img]="Settings2"></lucide-angular> Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let prof of filteredProfesores">
+          <td class="profesor-name-cell">
+            <lucide-angular [img]="UserRound"></lucide-angular>
+            <span>{{ prof.name }}</span>
+          </td>
+          <td class="dni-cell">
+            <lucide-angular [img]="IdCard"></lucide-angular>
+            <span>{{ prof.dni || '—' }}</span>
+          </td>
+          <td class="phone-cell">
+            <lucide-angular [img]="Phone"></lucide-angular>
+            <span>{{ prof.phone || '—' }}</span>
+          </td>
+          <td class="address-cell">
+            <lucide-angular [img]="Home"></lucide-angular>
+            <span>{{ prof.address || '—' }}</span>
+          </td>
+          <td class="specialty-cell">
+            <lucide-angular [img]="BookOpen"></lucide-angular>
+            <span>{{ getDepartamentoNombre(prof.departamentoId) }}</span>
+          </td>
+          <td class="entry-time-cell">
+            <lucide-angular [img]="LogIn"></lucide-angular>
+            <span>{{ getHorarioTexto(prof.horarioId) }}</span>
+          </td>
+          <td class="password-cell">
+            <lucide-angular [img]="KeyRound"></lucide-angular>
+            <span>••••••</span>
+          </td>
+          <td class="acciones-cell">
+            <div class="acciones-buttons">
+              <button class="btn-view" (click)="viewProfessorDetails(prof)" title="Ver detalles del profesor">
+                <lucide-angular [img]="Eye"></lucide-angular>
+              </button>
+              <button class="btn-edit" (click)="onEdit(prof)" title="Editar profesor">
+                <lucide-angular [img]="Edit3"></lucide-angular>
+              </button>
+              <button class="btn-delete" (click)="deleteProfesor(prof)" title="Eliminar profesor">
+                <lucide-angular [img]="Trash2"></lucide-angular>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="filteredProfesores.length === 0">
+          <td colspan="9" class="empty-state">
+            <p>No se encontraron profesores</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal de Detalles del Profesor -->
+<div class="modal-overlay" *ngIf="showDetailsModal" (click)="closeDetailsModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Detalles del Profesor</h2>
+      <button class="btn-close" (click)="closeDetailsModal()" title="Cerrar">
+        <lucide-angular [img]="X"></lucide-angular>
+      </button>
+    </div>
+
+    <div class="modal-body" *ngIf="loadingDetails">
+      <div class="loading-spinner">
+        <p>Cargando información...</p>
+      </div>
+    </div>
+
+    <div class="modal-body" *ngIf="!loadingDetails && selectedProfessor">
+      <div class="details-grid">
+        <!-- Información Personal -->
+        <div class="detail-section">
+          <h3><lucide-angular [img]="UserRound"></lucide-angular> Información Personal</h3>
+          <div class="detail-item">
+            <span class="detail-label">Nombre:</span>
+            <span class="detail-value">{{ selectedProfessor.name }}</span>
+          </div>
+          <div class="detail-item" *ngIf="selectedProfessor.apellidos">
+            <span class="detail-label">Apellidos:</span>
+            <span class="detail-value">{{ selectedProfessor.apellidos }}</span>
+          </div>
+          <div class="detail-item" *ngIf="selectedProfessor.dni">
+            <span class="detail-label"><lucide-angular [img]="IdCard"></lucide-angular> DNI:</span>
+            <span class="detail-value">{{ selectedProfessor.dni }}</span>
+          </div>
+          <div class="detail-item" *ngIf="selectedProfessor.phone">
+            <span class="detail-label"><lucide-angular [img]="Phone"></lucide-angular> Teléfono:</span>
+            <span class="detail-value">{{ selectedProfessor.phone }}</span>
+          </div>
+          <div class="detail-item" *ngIf="selectedProfessor.address">
+            <span class="detail-label"><lucide-angular [img]="Home"></lucide-angular> Dirección:</span>
+            <span class="detail-value">{{ selectedProfessor.address }}</span>
+          </div>
+        </div>
+
+        <!-- Información Académica -->
+        <div class="detail-section">
+          <h3><lucide-angular [img]="BookOpen"></lucide-angular> Información Académica</h3>
+          <div class="detail-item" *ngIf="selectedProfessor.departamentoId">
+            <span class="detail-label">Especialidad:</span>
+            <span class="detail-value">{{ getDepartamentoNombre(selectedProfessor.departamentoId) }}</span>
+          </div>
+          <div class="detail-item" *ngIf="selectedProfessor.horarioId">
+            <span class="detail-label">Horario:</span>
+            <span class="detail-value">{{ getHorarioTexto(selectedProfessor.horarioId) }}</span>
+          </div>
+          <div class="detail-item" *ngIf="selectedProfessor.email">
+            <span class="detail-label">Email:</span>
+            <span class="detail-value">{{ selectedProfessor.email }}</span>
+          </div>
+        </div>
+
+        <!-- Información del Sistema -->
+        <div class="detail-section">
+          <h3><lucide-angular [img]="Lock"></lucide-angular> Información del Sistema</h3>
+          <div class="detail-item" *ngIf="selectedProfessor.id">
+            <span class="detail-label">ID:</span>
+            <span class="detail-value">#{{ selectedProfessor.id }}</span>
+          </div>
+          <div class="detail-item" *ngIf="selectedProfessor.role">
+            <span class="detail-label">Rol:</span>
+            <span class="detail-value">{{ selectedProfessor.role }}</span>
+          </div>
+          <div class="detail-item" *ngIf="selectedProfessor.lastLogin">
+            <span class="detail-label">Último Acceso:</span>
+            <span class="detail-value">{{ selectedProfessor.lastLogin }}</span>
+          </div>
+        </div>
+
+        <!-- Materias (si están disponibles) -->
+        <div class="detail-section" *ngIf="selectedProfessor.materias && selectedProfessor.materias.length > 0">
+          <h3><lucide-angular [img]="BookOpen"></lucide-angular> Materias Asignadas</h3>
+          <div class="materias-list">
+            <div class="materia-item" *ngFor="let materia of selectedProfessor.materias">
+              <span class="materia-name">{{ materia.nombre_materia }}</span>
+              <span class="materia-code" *ngIf="materia.codigo_materia">({{ materia.codigo_materia }})</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Horarios de Clases (si están disponibles) -->
+        <div class="detail-section" *ngIf="selectedProfessor.horarios && selectedProfessor.horarios.length > 0">
+          <h3><lucide-angular [img]="LogIn"></lucide-angular> Horarios de Clases</h3>
+          <div class="horarios-list">
+            <div class="horario-item" *ngFor="let horario of selectedProfessor.horarios">
+              <div class="horario-info">
+                <span class="horario-day">{{ horario.dia_semana }}</span>
+                <span class="horario-time">{{ formatTime(horario.hora_inicio) }} - {{ formatTime(horario.hora_fin) }}</span>
+                <span class="horario-materia" *ngIf="horario.materia">{{ horario.materia.nombre_materia }}</span>
+                <span class="horario-aula" *ngIf="horario.aula">{{ horario.aula.nombre_aula }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

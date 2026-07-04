@@ -1,0 +1,229 @@
+<div class="dashboard-container">
+  <!-- Header Épico de la Sección -->
+  <div class="section-header">
+    <div class="header-main">
+      <div class="header-left">
+        <div class="header-icon-wrapper">
+          <lucide-angular [img]="BarChart3" class="header-icon"></lucide-angular>
+        </div>
+        <div class="header-text">
+          <h1 class="section-title">Dashboard</h1>
+          <p class="section-description">Bienvenido al Sistema de Asistencia CETPRO - Panel de control principal</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="btn-primary" (click)="refreshStats()" [disabled]="loading">
+          <lucide-angular [img]="RefreshCw" class="icon" [class.spinning]="loading"></lucide-angular>
+          {{ loading ? 'Cargando...' : 'Actualizar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estadísticas principales -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon">
+        <lucide-angular [img]="Users" class="icon"></lucide-angular>
+      </div>
+      <div class="stat-content">
+        <p class="stat-label">Total Profesores</p>
+        <h2 class="stat-value">{{ stats.totalProfesores }}</h2>
+        <p class="stat-change positive">
+          <lucide-angular [img]="TrendingUp" class="icon-small"></lucide-angular>
+          <span>Activos</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">
+        <lucide-angular [img]="CheckCircle2" class="icon"></lucide-angular>
+      </div>
+      <div class="stat-content">
+        <p class="stat-label">Asistencia Hoy</p>
+        <h2 class="stat-value">{{ stats.asistenciaHoy }}</h2>
+        <p class="stat-change positive">
+          <lucide-angular [img]="Clock" class="icon-small"></lucide-angular>
+          <span>{{ stats.porcentajeHoy }}% del total</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">
+        <lucide-angular [img]="Calendar" class="icon"></lucide-angular>
+      </div>
+      <div class="stat-content">
+        <p class="stat-label">Este Mes</p>
+        <h2 class="stat-value">{{ stats.registrosMes }}</h2>
+        <p class="stat-change">
+          <lucide-angular [img]="FileText" class="icon-small"></lucide-angular>
+          <span>Registros</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">
+        <lucide-angular [img]="BarChart3" class="icon"></lucide-angular>
+      </div>
+      <div class="stat-content">
+        <p class="stat-label">Promedio Diario</p>
+        <h2 class="stat-value">{{ stats.promedioDiario }}</h2>
+        <p class="stat-change positive">
+          <lucide-angular [img]="TrendingUp" class="icon-small"></lucide-angular>
+          <span>Asistencias/día</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">
+        <lucide-angular [img]="Building2" class="icon"></lucide-angular>
+      </div>
+      <div class="stat-content">
+        <p class="stat-label">Especialidades</p>
+        <h2 class="stat-value">{{ stats.totalDepartamentos }}</h2>
+        <p class="stat-change">
+          <lucide-angular [img]="FileText" class="icon-small"></lucide-angular>
+          <span>Registrados</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">
+        <lucide-angular [img]="Clock" class="icon"></lucide-angular>
+      </div>
+      <div class="stat-content">
+        <p class="stat-label">Horarios</p>
+        <h2 class="stat-value">{{ stats.totalHorarios }}</h2>
+        <p class="stat-change">
+          <lucide-angular [img]="FileText" class="icon-small"></lucide-angular>
+          <span>Configurados</span>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gráficos y tablas -->
+  <div class="dashboard-grid">
+    <!-- Actividad reciente -->
+    <div class="dashboard-card">
+      <div class="card-header">
+        <h3>
+          <lucide-angular [img]="Clock" class="icon-header"></lucide-angular>
+          Actividad Reciente
+        </h3>
+        <button class="btn-link">Ver todo</button>
+      </div>
+      <div class="card-body">
+        <div class="activity-list">
+          <div class="activity-item" *ngFor="let activity of recentActivity">
+            <div class="activity-icon">
+              <lucide-angular [img]="activity.icon" class="icon"></lucide-angular>
+            </div>
+            <div class="activity-content">
+              <p class="activity-title">{{ activity.title }}</p>
+              <p class="activity-time">
+                <lucide-angular [img]="Clock" class="icon-time"></lucide-angular>
+                <span>{{ activity.time }}</span>
+              </p>
+            </div>
+          </div>
+          <div class="activity-empty" *ngIf="recentActivity.length === 0">
+            <lucide-angular [img]="Inbox" class="icon-large"></lucide-angular>
+            <p>No hay actividad reciente</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resumen de asistencia -->
+    <div class="dashboard-card">
+      <div class="card-header">
+        <h3>
+          <lucide-angular [img]="CheckCircle2" class="icon-header"></lucide-angular>
+          Resumen de Asistencia
+        </h3>
+        <select class="period-select">
+          <option>Última semana</option>
+          <option>Último mes</option>
+          <option>Último trimestre</option>
+        </select>
+      </div>
+      <div class="card-body">
+        <div class="summary-stats">
+          <div class="summary-item">
+            <div class="summary-label">Presentes</div>
+            <div class="summary-value">{{ stats.resumen.presentes }}</div>
+            <div class="summary-bar">
+              <div class="summary-bar-fill present" style="width: {{ stats.resumen.porcentajePresentes }}%;"></div>
+            </div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Justificados</div>
+            <div class="summary-value">{{ stats.resumen.justificados }}</div>
+            <div class="summary-bar">
+              <div class="summary-bar-fill justified" style="width: {{ stats.resumen.porcentajeJustificados }}%;"></div>
+            </div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Tardanzas</div>
+            <div class="summary-value">{{ stats.resumen.tardanzas }}</div>
+            <div class="summary-bar">
+              <div class="summary-bar-fill late" style="width: {{ stats.resumen.porcentajeTardanzas }}%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Accesos rápidos -->
+  <div class="dashboard-card">
+      <div class="card-header">
+        <h3>
+          <lucide-angular [img]="FileText" class="icon-header"></lucide-angular>
+          Accesos Rápidos
+        </h3>
+      </div>
+    <div class="card-body">
+      <div class="quick-actions">
+        <a routerLink="/profesores" class="quick-action">
+          <lucide-angular [img]="UserPen" class="icon-large"></lucide-angular>
+          <span>Gestionar Profesores</span>
+        </a>
+        <a routerLink="/asistencia" class="quick-action">
+          <lucide-angular [img]="CheckSquare" class="icon-large"></lucide-angular>
+          <span>Registrar Asistencia</span>
+        </a>
+        <a routerLink="/qr" class="quick-action">
+          <lucide-angular [img]="QrCode" class="icon-large"></lucide-angular>
+          <span>Generar Códigos QR</span>
+        </a>
+        <a routerLink="/administrador" class="quick-action">
+          <lucide-angular [img]="ShieldUser" class="icon-large"></lucide-angular>
+          <span>Administradores</span>
+        </a>
+        <a routerLink="/departamentos" class="quick-action">
+          <lucide-angular [img]="Building2" class="icon-large"></lucide-angular>
+          <span>Especialidades</span>
+        </a>
+        <a routerLink="/horarios" class="quick-action">
+          <lucide-angular [img]="Clock" class="icon-large"></lucide-angular>
+          <span>Horarios</span>
+        </a>
+        <a routerLink="/reportes" class="quick-action">
+          <lucide-angular [img]="FileText" class="icon-large"></lucide-angular>
+          <span>Reportes</span>
+        </a>
+        <a routerLink="/notifications" class="quick-action">
+          <lucide-angular [img]="Bell" class="icon-large"></lucide-angular>
+          <span>Notificaciones</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
